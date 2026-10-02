@@ -1,0 +1,6 @@
+data:
+  sample_frac: 0.1
+  random_state: 42
+features:
+  drop_sensitive: true
+# Configuration complete en phase 2.

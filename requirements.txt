@@ -1,0 +1,23 @@
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+lightgbm==4.6.0
+xgboost==3.0.5
+shap==0.49.1
+fairlearn==0.13.0
+evidently==0.7.20
+pandera[pandas]==0.26.1
+dvc==3.63.0
+mlflow==3.10.1
+fastapi==0.119.0
+uvicorn==0.38.0
+pydantic==2.12.3
+PyYAML==6.0.3
+matplotlib==3.10.7
+pytest==8.4.2
+ruff==0.14.0
+pre-commit==4.3.0
+httpx==0.28.1
+gnumake==4.4.1; sys_platform == 'win32'
+scipy==1.15.3
+pathspec==0.12.1

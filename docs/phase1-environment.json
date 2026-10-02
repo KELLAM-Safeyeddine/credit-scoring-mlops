@@ -1,0 +1,20 @@
+{
+  "python": "3.11.9",
+  "platform": "Windows",
+  "venv_name": "creditS",
+  "versions": {
+    "numpy": "2.2.6",
+    "pandas": "2.3.3",
+    "scikit-learn": "1.7.2",
+    "lightgbm": "4.6.0",
+    "xgboost": "3.0.5",
+    "shap": "0.49.1",
+    "fairlearn": "0.13.0",
+    "evidently": "0.7.20",
+    "pandera": "0.26.1",
+    "dvc": "3.63.0",
+    "mlflow": "3.10.1",
+    "fastapi": "0.119.0"
+  },
+  "airflow_installed": false
+}
