@@ -86,6 +86,16 @@ quality_gate:
   min_auc: 0.74
   max_auc_drop_vs_prod: 0.005
   require_shap: true
+qualification:
+  max_trials: 18
+  reweighing_powers: [1.0, 1.25, 1.5]
+  configurations:
+    - {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 5.0}
+    - {n_estimators: 500, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 10.0}
+    - {n_estimators: 300, num_leaves: 31, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 10.0}
+    - {n_estimators: 500, num_leaves: 31, learning_rate: 0.03, min_child_samples: 150, reg_lambda: 15.0}
+    - {n_estimators: 300, num_leaves: 7, learning_rate: 0.05, min_child_samples: 80, reg_lambda: 5.0}
+    - {n_estimators: 500, num_leaves: 7, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 10.0}
 mlflow:
   experiment_name: credit-scoring
   registered_model_name: credit-scoring

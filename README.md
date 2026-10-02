@@ -227,6 +227,8 @@ de production dans un dataset d'entraînement n'est pas implémentée.
 
 [Architecture](docs/architecture.md), [Docker](docs/docker.md),
 [Airflow](docs/airflow.md), [Model Card](docs/MODEL_CARD.md).
+[Recherche complémentaire de qualification](docs/qualification.md) : 18 essais,
+aucun candidat franchissant simultanément les seuils d'AUC et d'équité.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les dernières validations.
