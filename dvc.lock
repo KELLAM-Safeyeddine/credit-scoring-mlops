@@ -10,12 +10,12 @@ stages:
       nfiles: 11
     - path: src/config.py
       hash: md5
-      md5: 8f59b5ab8451636493e800b7ce9e94b7
-      size: 2614
+      md5: 38c207edaca1b202d347dcab1c02d2ac
+      size: 2917
     - path: src/data/make_dataset.py
       hash: md5
-      md5: e843453e70b25b7d89e6a5718cc8fd31
-      size: 2987
+      md5: 752ad17e13aa106cb991bfcc3108e297
+      size: 3321
     - path: src/data/validate.py
       hash: md5
       md5: bcad54f26ea86c98da38a0bf30fdb614
@@ -54,22 +54,49 @@ stages:
       md5: c8443d1310da397b625d2777ad1368ce.dir
       size: 17340124
       nfiles: 5
+    - path: data/raw/bureau.csv
+      hash: md5
+      md5: ec0f59a16e7071de66b83217b23bb390
+      size: 170016717
+    - path: data/raw/installments_payments.csv
+      hash: md5
+      md5: 4e9751972d02c376f0e75edbf6c9d07d
+      size: 723118349
+    - path: data/raw/previous_application.csv
+      hash: md5
+      md5: bd1eb5f08a4700414db1742e5cc0f9fa
+      size: 404973293
     - path: src/config.py
       hash: md5
-      md5: 8f59b5ab8451636493e800b7ce9e94b7
-      size: 2614
+      md5: 38c207edaca1b202d347dcab1c02d2ac
+      size: 2917
+    - path: src/features/aggregations.py
+      hash: md5
+      md5: 98609fbb2f4ede9f15665b9f80d70063
+      size: 7832
     - path: src/features/build_features.py
       hash: md5
-      md5: 9b6363c0aac1dbea962a99d5de10b1a0
-      size: 2556
+      md5: b146afed21f04dab8c56d56f49474228
+      size: 5219
+    - path: src/features/contracts.py
+      hash: md5
+      md5: f8f0e5de4d8908eb8147740728d6e4fb
+      size: 965
+    - path: src/features/encoding.py
+      hash: md5
+      md5: 67fc78395d04ac4a569a7a1dc576ad07
+      size: 2413
     params:
       params.yaml:
         features:
-          mode: numeric_baseline
+          mode: engineered
           drop_sensitive: true
           use_bureau: true
           use_previous_application: true
           use_installments: true
+          chunksize: 100000
+          installment_partitions: 64
+          history_cutoff_days: 0
           sensitive_columns:
           - CODE_GENDER
           - DAYS_BIRTH
@@ -81,17 +108,17 @@ stages:
     outs:
     - path: data/processed
       hash: md5
-      md5: cbc82613d475b6d1bd5453b8145292b9.dir
-      size: 14749055
-      nfiles: 14
+      md5: 43e9932ad95785755dcbe2fa253f4f3c.dir
+      size: 36125438
+      nfiles: 16
   train:
     cmd: '"creditS/Scripts/python.exe" -m src.models.train'
     deps:
     - path: data/processed
       hash: md5
-      md5: cbc82613d475b6d1bd5453b8145292b9.dir
-      size: 14749055
-      nfiles: 14
+      md5: 43e9932ad95785755dcbe2fa253f4f3c.dir
+      size: 36125438
+      nfiles: 16
     - path: data/raw
       hash: md5
       md5: 6d6f2659068bf71e19aece18bd8736eb.dir
@@ -99,16 +126,28 @@ stages:
       nfiles: 11
     - path: src/config.py
       hash: md5
-      md5: 8f59b5ab8451636493e800b7ce9e94b7
-      size: 2614
+      md5: 38c207edaca1b202d347dcab1c02d2ac
+      size: 2917
+    - path: src/features/aggregations.py
+      hash: md5
+      md5: 98609fbb2f4ede9f15665b9f80d70063
+      size: 7832
     - path: src/features/build_features.py
       hash: md5
-      md5: 9b6363c0aac1dbea962a99d5de10b1a0
-      size: 2556
+      md5: b146afed21f04dab8c56d56f49474228
+      size: 5219
+    - path: src/features/contracts.py
+      hash: md5
+      md5: f8f0e5de4d8908eb8147740728d6e4fb
+      size: 965
+    - path: src/features/encoding.py
+      hash: md5
+      md5: 67fc78395d04ac4a569a7a1dc576ad07
+      size: 2413
     - path: src/models/train.py
       hash: md5
-      md5: a038ce48e2a59d53fed309629691bfe8
-      size: 4188
+      md5: c52b0020ea6a04ef2a6b92960ed73924
+      size: 4191
     params:
       params.yaml:
         data.random_state: 42
@@ -151,32 +190,32 @@ stages:
     outs:
     - path: models/baseline.pkl
       hash: md5
-      md5: 75ad4f06f349ef8e0685307c1a508cb1
-      size: 8412
+      md5: 2b39d111951e0f96945323d7d80f97a0
+      size: 20187
     - path: reports/baseline_metrics.json
       hash: md5
-      md5: a4f3bff629411581a19c027b85ee7bea
-      size: 593
+      md5: 488ae627420a63ed9916b1f60b6c86c8
+      size: 595
   simulate_production:
     cmd: '"creditS/Scripts/python.exe" -m src.data.simulate_production'
     deps:
     - path: data/processed
       hash: md5
-      md5: cbc82613d475b6d1bd5453b8145292b9.dir
-      size: 14749055
-      nfiles: 14
+      md5: 43e9932ad95785755dcbe2fa253f4f3c.dir
+      size: 36125438
+      nfiles: 16
     - path: models/baseline.pkl
       hash: md5
-      md5: 75ad4f06f349ef8e0685307c1a508cb1
-      size: 8412
+      md5: 2b39d111951e0f96945323d7d80f97a0
+      size: 20187
     - path: src/config.py
       hash: md5
-      md5: 8f59b5ab8451636493e800b7ce9e94b7
-      size: 2614
+      md5: 38c207edaca1b202d347dcab1c02d2ac
+      size: 2917
     - path: src/data/simulate_production.py
       hash: md5
-      md5: 7b598fec585f46b71d7e00d8932182f3
-      size: 3013
+      md5: 225a01b6063ad021e0a731befd2e4022
+      size: 3017
     params:
       params.yaml:
         data.random_state: 42
@@ -196,6 +235,6 @@ stages:
     outs:
     - path: data/production
       hash: md5
-      md5: 6f83a402ae708bcf4941f8af76c7a0fb.dir
-      size: 3161095
+      md5: e618a10d57c3191e539d90c968a231bb.dir
+      size: 7467260
       nfiles: 33

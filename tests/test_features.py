@@ -39,3 +39,98 @@ def test_imputer_fit_does_not_use_validation(config: dict) -> None:
     assert 0.01 <= model["threshold"] <= 0.99
     assert 0 <= metrics["validation_auc"] <= 1
     assert metrics["promotion_status"] == "not_evaluated_not_promoted"
+
+
+def test_ratios_and_missing_denominators() -> None:
+    from src.features.build_features import add_ratios
+
+    frame = pd.DataFrame(
+        {
+            "AMT_CREDIT": [200.0, 200.0, 200.0],
+            "AMT_INCOME_TOTAL": [100.0, 0.0, np.nan],
+            "AMT_ANNUITY": [10.0, 0.0, np.nan],
+            "DAYS_EMPLOYED": [-1000.0, np.nan, -500.0],
+            "DAYS_BIRTH": [-10000.0, -10000.0, -10000.0],
+            "EXT_SOURCE_1": [0.2, np.nan, np.nan],
+            "EXT_SOURCE_2": [0.4, 0.6, np.nan],
+            "EXT_SOURCE_3": [0.6, np.nan, np.nan],
+        }
+    )
+    result = add_ratios(frame)
+    assert result.loc[0, "CREDIT_INCOME_RATIO"] == 2
+    assert result.loc[0, "ANNUITY_INCOME_RATIO"] == 0.1
+    assert result.loc[0, "CREDIT_TERM"] == 20
+    assert result.loc[0, "EMPLOYED_AGE_RATIO"] == 0.1
+    assert result.loc[0, "EXT_SOURCE_MEAN"] == pytest.approx(0.4)
+    assert result.loc[1, "EXT_SOURCE_MEAN"] == 0.6
+    assert pd.isna(result.loc[2, "EXT_SOURCE_MEAN"])
+    assert result.loc[1:, ["CREDIT_INCOME_RATIO", "CREDIT_TERM"]].isna().all().all()
+    numeric = numeric_features(result)
+    assert "EMPLOYED_AGE_RATIO" not in numeric
+    assert not np.isinf(numeric.to_numpy()).any()
+
+
+def test_encoder_vocabulary_is_train_only_and_reusable() -> None:
+    import pickle
+
+    from src.features.encoding import FeatureEncoder
+
+    train = pd.DataFrame(
+        {
+            "amount": [1.0, 2.0, np.nan],
+            "job": ["A", "B", None],
+            "CODE_GENDER": ["M", "F", "M"],
+            "EMPLOYED_AGE_RATIO": [0.1, 0.2, 0.3],
+        }
+    )
+    validation = pd.DataFrame(
+        {"amount": [9999.0], "job": ["VAL_ONLY"], "CODE_GENDER": ["F"], "EMPLOYED_AGE_RATIO": [0.9]}
+    )
+    encoder = FeatureEncoder().fit(train)
+    restored = pickle.loads(pickle.dumps(encoder))
+    encoded = restored.transform(validation)
+    assert not any("VAL_ONLY" in name for name in encoder.columns)
+    assert encoded.filter(like="job_").to_numpy().sum() == 0
+    assert encoded.loc[0, "amount"] == 9999
+    assert list(encoded.columns) == list(encoder.transform(train).columns)
+    assert not EXCLUDED.intersection(encoded.columns)
+    assert "EMPLOYED_AGE_RATIO" not in encoder.numeric_columns
+    with pytest.raises(ValueError, match="Unexpected feature inputs"):
+        encoder.transform(validation.assign(unexpected=1))
+
+
+def test_engineered_exports_use_one_schema_and_preserve_audit(
+    tmp_path, applications: pd.DataFrame, config: dict
+) -> None:
+    import json
+    import pickle
+
+    from src.features.build_features import build_dataset
+
+    interim = tmp_path / "interim"
+    output = tmp_path / "processed"
+    interim.mkdir()
+    for name, frame in prepare_splits(applications, config).items():
+        frame.to_csv(interim / f"{name}.csv")
+    config["paths"]["interim"] = str(interim)
+    config["paths"]["processed"] = str(output)
+    for name in ("use_bureau", "use_previous_application", "use_installments"):
+        config["features"][name] = False
+    counts = build_dataset(config)
+    assert counts == {"train": 288, "val": 96, "test": 96, "production": 120}
+    columns = json.loads((output / "feature_columns.json").read_text())
+    encoder = pickle.loads((output / "feature_encoder.pkl").read_bytes())
+    assert encoder.columns == columns
+    assert encoder.__class__.__module__ == "src.features.encoding"
+    assert {"CREDIT_INCOME_RATIO", "ANNUITY_INCOME_RATIO", "CREDIT_TERM", "EXT_SOURCE_MEAN"} <= set(
+        columns
+    )
+    assert not EXCLUDED.intersection(columns)
+    for name in counts:
+        features = pd.read_csv(output / f"X_{name}.csv", index_col="SK_ID_CURR")
+        labels = pd.read_csv(output / f"y_{name}.csv", index_col="SK_ID_CURR")
+        audit = pd.read_csv(output / f"sensitive_{name}.csv", index_col="SK_ID_CURR")
+        assert list(features.columns) == columns
+        assert features.index.equals(labels.index) and features.index.equals(audit.index)
+        assert "EMPLOYED_AGE_RATIO" in audit
+        assert not np.isinf(features.to_numpy()).any()

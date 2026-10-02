@@ -26,9 +26,12 @@ def applications() -> pd.DataFrame:
             "TARGET": (np.arange(n) % 12 == 0).astype("int64"),
             "AMT_INCOME_TOTAL": rng.uniform(10000, 300000, n),
             "AMT_CREDIT": rng.uniform(100000, 1000000, n),
+            "AMT_ANNUITY": rng.uniform(1000, 20000, n),
             "CODE_GENDER": np.where(np.arange(n) % 2, "M", "F"),
             "DAYS_BIRTH": -rng.integers(18 * 365, 75 * 365, n),
             "DAYS_EMPLOYED": employed,
             "EXT_SOURCE_1": rng.uniform(0, 1, n),
+            "EXT_SOURCE_2": rng.uniform(0, 1, n),
+            "EXT_SOURCE_3": rng.uniform(0, 1, n),
         }
     )

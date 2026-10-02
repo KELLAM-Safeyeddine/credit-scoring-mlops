@@ -15,12 +15,15 @@ data:
   random_state: 42
   sample_frac: 0.1
 features:
-  mode: numeric_baseline
+  mode: engineered
   drop_sensitive: true
   use_bureau: true
   use_previous_application: true
   use_installments: true
-  # The three aggregation switches become operational in phase 3.
+  chunksize: 100000
+  installment_partitions: 64
+  history_cutoff_days: 0
+  # Age-derived employment ratio is computed for audit and excluded from the model.
   sensitive_columns: [CODE_GENDER, DAYS_BIRTH, AGE_YEARS, AGE_GROUP]
 train:
   model: logistic_regression

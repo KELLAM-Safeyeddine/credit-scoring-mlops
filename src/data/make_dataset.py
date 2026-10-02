@@ -10,16 +10,13 @@ from src.config import load_config, parse_params, project_path, write_json
 from src.data.validate import load_validated_application
 
 
-def prepare_splits(frame: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, pd.DataFrame]:
-    """Reserve production first; stratify remaining rows into train/val/test."""
-    settings = cfg["data"]
-    seed = settings["random_state"]
+def clean_application(frame: pd.DataFrame, cfg: dict[str, Any]) -> pd.DataFrame:
+    """Clean employment and derive audit age groups without population statistics."""
     frame = frame.copy()
-    if settings["sample_frac"] < 1:
-        frame, _ = train_test_split(
-            frame, train_size=settings["sample_frac"], stratify=frame.TARGET, random_state=seed
-        )
-    frame["EMPLOYED_ANOMALY"] = frame.DAYS_EMPLOYED.eq(365243).astype("int8")
+    anomaly = frame.DAYS_EMPLOYED.eq(365243)
+    if "EMPLOYED_ANOMALY" in frame:
+        anomaly |= frame.EMPLOYED_ANOMALY.eq(1)
+    frame["EMPLOYED_ANOMALY"] = anomaly.astype("int8")
     frame["DAYS_EMPLOYED"] = frame.DAYS_EMPLOYED.mask(frame.EMPLOYED_ANOMALY.eq(1), np.nan)
     frame["AGE_YEARS"] = -frame.DAYS_BIRTH / 365.25
     frame["AGE_GROUP"] = pd.cut(
@@ -28,6 +25,18 @@ def prepare_splits(frame: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, pd.Dat
         labels=cfg["fairness"]["age_labels"],
         right=False,
     )
+    return frame
+
+
+def prepare_splits(frame: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, pd.DataFrame]:
+    """Reserve production first; stratify remaining rows into train/val/test."""
+    settings = cfg["data"]
+    seed = settings["random_state"]
+    if settings["sample_frac"] < 1:
+        frame, _ = train_test_split(
+            frame, train_size=settings["sample_frac"], stratify=frame.TARGET, random_state=seed
+        )
+    frame = clean_application(frame, cfg)
     development, production = train_test_split(
         frame, test_size=settings["production_size"], stratify=frame.TARGET, random_state=seed
     )

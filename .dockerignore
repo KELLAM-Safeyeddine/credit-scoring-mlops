@@ -19,3 +19,4 @@ reports/
 .wheel-cache/
 .runtime/
 .phase2-repro-check/
+.phase3-repro-check/

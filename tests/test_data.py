@@ -96,3 +96,19 @@ def test_missing_tables_rejected(tmp_path: Path) -> None:
         archive.writestr("application_train.csv", "a\n1\n")
     with pytest.raises(ValueError, match="Missing required"):
         extract_archive(tmp_path)
+
+
+def test_cleaning_age_boundaries_and_sentinel_is_idempotent(config: dict) -> None:
+    from src.data.make_dataset import clean_application
+
+    frame = pd.DataFrame(
+        {
+            "DAYS_BIRTH": -365.25 * pd.Series([29.9, 30.0, 45.0, 60.0]),
+            "DAYS_EMPLOYED": [365243.0, -100.0, -200.0, -300.0],
+        }
+    )
+    cleaned = clean_application(frame, config)
+    assert cleaned.AGE_GROUP.astype(str).tolist() == ["<30", "30-45", "45-60", "60+"]
+    assert cleaned.loc[0, "EMPLOYED_ANOMALY"] == 1
+    assert pd.isna(cleaned.loc[0, "DAYS_EMPLOYED"])
+    pd.testing.assert_frame_equal(clean_application(cleaned, config), cleaned)

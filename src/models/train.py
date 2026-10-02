@@ -62,8 +62,8 @@ def fit_baseline(
     predictions = (probabilities >= threshold).astype("int8")
     auc = float(roc_auc_score(y_val, probabilities))
     metrics = {
-        "phase": 2,
-        "model": "logistic_regression_numeric_baseline",
+        "phase": 3,
+        "model": "logistic_regression_engineered_baseline",
         "validation_auc": auc,
         "validation_pr_auc": float(average_precision_score(y_val, probabilities)),
         "validation_gini": 2 * auc - 1,

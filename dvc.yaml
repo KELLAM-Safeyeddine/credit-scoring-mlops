@@ -13,6 +13,12 @@ stages:
     deps:
       - src/config.py
       - src/features/build_features.py
+      - src/features/aggregations.py
+      - src/features/contracts.py
+      - src/features/encoding.py
+      - ${paths.raw}/bureau.csv
+      - ${paths.raw}/previous_application.csv
+      - ${paths.raw}/installments_payments.csv
       - ${paths.interim}
     params: [runtime.python, features, paths.interim, paths.processed]
     outs: ["${paths.processed}"]
@@ -22,6 +28,9 @@ stages:
       - src/config.py
       - src/models/train.py
       - src/features/build_features.py
+      - src/features/aggregations.py
+      - src/features/contracts.py
+      - src/features/encoding.py
       - ${paths.raw}
       - ${paths.processed}
     params: [runtime.python, train, data.random_state, paths.models, paths.reports, paths.processed]

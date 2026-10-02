@@ -1,7 +1,7 @@
 # Scoring de crédit explicable et équitable
 
 Chaîne imposée : DVC → MLflow → Airflow → Docker → FastAPI → Evidently.
-Projet pédagogique, en construction phase par phase. Phases 1 et 2 réalisées : environnement, données validées et pipeline DVC de référence.
+Projet pédagogique, en construction phase par phase. Phases 1 à 3 réalisées : environnement, données validées et feature engineering reproductible avec DVC.
 Les DAGs, Dockerfiles et services restent à implémenter dans leurs phases dédiées.
 
 ## Installation Windows PowerShell
@@ -92,3 +92,24 @@ Les agrégations et ratios arriveront en phase 3, les expériences MLflow en pha
 Preuves d'exécution et limites : [docs/phase2-validation.md](docs/phase2-validation.md).
 Le test de régénération a confirmé 54 fichiers identiques par SHA-256 après
 réexécution forcée sans cache d'exécution.
+
+
+## Nettoyage et features (phase 3)
+
+Les agrégations bureau/previous_application/installments_payments sont maintenant
+opérationnelles. Les ratios financiers, 14 agrégats historiques et l'encodage
+ajusté sur le train produisent 261 features. L'historique est filtré au jour de la
+demande ; les versements fractionnés sont regroupés par échéance.
+
+Conformément au choix utilisateur, EMPLOYED_AGE_RATIO est calculé pour l'audit,
+puis exclu du modèle comme les autres variables d'âge et CODE_GENDER.
+Les splits de phase 2 restent inchangés. Le vocabulaire et l'encodeur sont
+sauvegardés dans data/processed ; l'imputation et la standardisation sont ajustées
+uniquement sur le train. Les NaN attendus sont documentés dans le manifeste.
+
+La référence logistique fixe atteint AUC validation 0,7210 (phase 2 : 0,7345) ;
+la comparaison des familles de modèles arrivera en phase 4. Aucun modèle n'est promu.
+29 tests passent et une seconde exécution sans cache reproduit 56 fichiers identiques.
+
+Détails et preuves : [docs/phase3-validation.md](docs/phase3-validation.md).
+L'EDA du train, exécutée, est dans [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb).

@@ -5,6 +5,7 @@ import json
 from itertools import combinations
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 
 from scripts.extract_data import sha256_file
@@ -27,6 +28,7 @@ def verify(cfg: dict) -> dict:
     """Check IDs, features, labels, sensitive data and production contracts."""
     processed = project_path(cfg, "processed")
     columns = json.loads((processed / "feature_columns.json").read_text(encoding="utf-8"))
+    feature_manifest = json.loads((processed / "feature_manifest.json").read_text(encoding="utf-8"))
     if EXCLUDED.intersection(columns):
         raise ValueError("Forbidden model columns.")
     sets = {}
@@ -41,6 +43,13 @@ def verify(cfg: dict) -> dict:
             raise ValueError(f"Audit alignment/ID failure in {name}.")
         if not set(y.TARGET.unique()) <= {0, 1}:
             raise ValueError(f"Unexpected labels in {name}.")
+        if np.isinf(x.to_numpy()).any():
+            raise ValueError(f"Infinite feature values in {name}.")
+        expected_missing = feature_manifest.get("missing_values", {}).get(name)
+        if expected_missing is not None:
+            actual_missing = {key: int(value) for key, value in x.isna().sum().items() if value}
+            if actual_missing != expected_missing:
+                raise ValueError(f"Unexpected missing values in {name}.")
         sets[name] = set(x.index)
         counts[name] = len(x)
     for first, second in combinations(sets, 2):

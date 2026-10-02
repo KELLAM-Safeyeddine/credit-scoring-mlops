@@ -53,14 +53,14 @@ def main() -> None:
             {
                 "batch_id": label,
                 "rows": len(ids),
-                "scenario": "normal_phase2_baseline",
+                "scenario": "normal_engineered_baseline",
                 "labels_available_at_batch": number + cfg["monitoring"]["label_delay_batches"],
             }
         )
     write_json(
         output / "manifest.json",
         {
-            "phase": 2,
+            "phase": 3,
             "feature_columns": columns,
             "batches": manifest,
             "label_policy": "Consumers must honor labels_available_at_batch.",

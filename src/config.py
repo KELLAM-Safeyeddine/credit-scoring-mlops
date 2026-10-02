@@ -22,8 +22,12 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         raise ValueError("Validation and test sizes must be positive.")
     if not cfg["features"]["drop_sensitive"]:
         raise ValueError("Sensitive variables are audit-only: drop_sensitive must be true.")
-    if cfg["features"]["mode"] != "numeric_baseline":
-        raise ValueError("Only numeric_baseline is implemented in phase 2.")
+    if cfg["features"]["mode"] != "engineered":
+        raise ValueError("Feature mode must be engineered.")
+    if cfg["features"]["chunksize"] < 1 or cfg["features"]["installment_partitions"] < 1:
+        raise ValueError("Chunk size and installment partitions must be positive.")
+    if cfg["features"]["history_cutoff_days"] > 0:
+        raise ValueError("Historical features cannot use observations after application day zero.")
     if cfg["train"]["model"] != "logistic_regression":
         raise ValueError("Multi-model experiments will be implemented in phase 4.")
     threshold = cfg["train"]["threshold"]
