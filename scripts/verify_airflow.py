@@ -2,6 +2,7 @@
 
 import argparse
 import base64
+import hashlib
 import json
 import sys
 import time
@@ -74,6 +75,9 @@ def main() -> None:
     parser.add_argument("--wait", action="store_true")
     parser.add_argument("--timeout", type=int, default=3600)
     parser.add_argument("--batch-id", default="01")
+    parser.add_argument("--observed-batch", type=int)
+    parser.add_argument("--normal-thresholds", action="store_true")
+    parser.add_argument("--expect-no-alert", action="store_true")
     args = parser.parse_args()
     errors = api("importErrors")
     assert errors["total_entries"] == 0, "Airflow DAG import errors."
@@ -82,11 +86,21 @@ def main() -> None:
     print("Two DAGs loaded without import errors.", flush=True)
     if args.trigger:
         dag = args.trigger + "_pipeline"
-        run_id = args.run_id or "phase7__" + datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
+        run_id = args.run_id or (
+            "phase10__" if args.normal_thresholds else "phase7__"
+        ) + datetime.now(UTC).strftime("%Y%m%dT%H%M%S%f")
         conf = (
             {"min_auc": 1.0}
             if args.trigger == "training"
-            else {"batch_id": args.batch_id, "max_score_psi": 0.0}
+            else {
+                "batch_id": args.batch_id,
+                **({} if args.normal_thresholds else {"max_score_psi": 0.0}),
+                **(
+                    {"observed_batch": args.observed_batch}
+                    if args.observed_batch is not None
+                    else {}
+                ),
+            }
         )
         api(f"dags/{dag}", {"is_paused": False}, "PATCH")
         if args.resume:
@@ -103,15 +117,22 @@ def main() -> None:
                 assert result["tasks"]["reject_model"] == "success"
                 assert result["tasks"]["register_and_promote"] == "skipped"
             else:
-                assert result["tasks"]["trigger_training"] == "success"
-                result["triggered_training"] = wait(
-                    "training_pipeline", "monitoring__" + run_id, args.timeout
-                )
+                if args.expect_no_alert:
+                    assert result["tasks"]["no_alert"] == "success"
+                    assert result["tasks"]["trigger_training"] == "skipped"
+                else:
+                    assert result["tasks"]["trigger_training"] == "success"
+                    result["triggered_training"] = wait(
+                        "training_pipeline", "monitoring__" + run_id, args.timeout
+                    )
             output = ROOT / "runtime/airflow/validation"
             output.mkdir(exist_ok=True)
             (output / f"{args.trigger}.json").write_text(
                 json.dumps(result, indent=2), encoding="utf-8"
             )
+            (
+                output / f"{args.trigger}_{hashlib.sha256(run_id.encode()).hexdigest()[:12]}.json"
+            ).write_text(json.dumps(result, indent=2), encoding="utf-8")
             print(json.dumps(result), flush=True)
 
 

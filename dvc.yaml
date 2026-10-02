@@ -49,8 +49,8 @@ stages:
       - src/config.py
       - src/data/simulate_production.py
       - ${paths.processed}
-      - ${paths.models}/baseline.pkl
-    params: [runtime.python, monitoring, data.random_state, paths.production, paths.models, paths.processed]
+      - ${paths.audit_models}/${monitoring.model_filename}
+    params: [runtime.python, monitoring, data.random_state, paths.production, paths.audit_models, paths.processed]
     outs: ["${paths.production}"]
   fairness:
     cmd: '"${runtime.python}" -m src.models.mitigate'

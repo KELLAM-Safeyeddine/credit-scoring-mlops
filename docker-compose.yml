@@ -30,6 +30,8 @@ x-airflow-common: &airflow-common
     - ./dvc.lock:/workspace/dvc.lock:ro
     - ./data:/workspace/data:ro
     - ./models:/workspace/models:ro
+    - ./artifacts:/workspace/artifacts:ro
+    - api_logs:/workspace/runtime/api:ro
     - ./runtime/airflow:/workspace/runtime/airflow
     - ./${DATA_ARCHIVE:?Run scripts/start_airflow.py}:/workspace/${DATA_ARCHIVE}:ro
     - airflow_logs:/opt/airflow/logs

@@ -201,8 +201,8 @@ python scripts/verify_airflow.py --trigger monitoring --wait
 UI : [Airflow](http://localhost:8081), [MLflow Docker](http://localhost:5001).
 Les identifiants Airflow générés se trouvent dans `.env`. Le serveur MLflow
 Docker est une copie indépendante initialisée depuis le serveur local sur 5000.
-La surveillance actuelle porte sur les lots et le candidat figés ; les scénarios
-de drift complets seront ajoutés en phase 10.
+La surveillance porte sur huit lots simulés et un candidat figé. Elle évalue
+les dérives et déclenche le DAG de réentraînement sous contrôle du quality gate.
 Fonctionnement, commandes et limites : [docs/airflow.md](docs/airflow.md).
 Preuves d'exécution : [docs/phase7-validation.md](docs/phase7-validation.md).
 
@@ -248,3 +248,25 @@ Le test Docker isolé valide un scoring à 200 avec un Registry MLflow HTTP
 synthétique séparé, sans modifier le Registry Home Credit.
 Configuration et persistance : [docs/docker.md](docs/docker.md).
 Preuves : [docs/phase9-validation.md](docs/phase9-validation.md).
+
+## Surveillance Evidently (phase 10)
+
+Evidently 0.7.20 produit les rapports de données, scores, population et performance.
+Fairlearn mesure l'équité par genre et âge ; les labels deviennent disponibles
+après deux lots. Les lots 01–03 ne déclenchent aucune alerte ; 04–08 déclenchent
+les alertes attendues après disponibilité des labels.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make monitor
+python -m src.monitoring.run_batches --batch-id 08 --observed-batch 8
+python scripts/verify_airflow.py --trigger monitoring --batch-id 01 --normal-thresholds --expect-no-alert --wait
+python scripts/verify_airflow.py --trigger monitoring --batch-id 08 --observed-batch 10 --normal-thresholds --wait
+```
+
+Les rapports sont archivés dans `reports/monitoring/`. La surveillance utilise
+le candidat mitigé figé pour le diagnostic : aucun champion Home Credit n'est
+encore qualifié. Le lot normal 02 présente une AUC brute sous 0,70, conservée
+comme avertissement ; la règle d'alerte tient compte de l'incertitude du petit lot.
+Règles, résultats et limites : [docs/monitoring.md](docs/monitoring.md).
+Preuves : [docs/phase10-validation.md](docs/phase10-validation.md).

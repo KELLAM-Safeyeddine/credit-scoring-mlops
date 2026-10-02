@@ -73,13 +73,13 @@ def test_ground_truth_not_read_before_release(tmp_path, config, monkeypatch):
     config["paths"] = {key: str(tmp_path / key) for key in config["paths"]}
     monkeypatch.setattr(monitoring, "load_config", lambda: config)
     production, processed, models = [
-        tmp_path / name for name in ("production", "processed", "models")
+        tmp_path / name for name in ("production", "processed", "audit_models")
     ]
     for directory in (production / "ground_truth", processed, models):
         directory.mkdir(parents=True)
     x = pd.DataFrame({"income": [1.0, 2.0]}, index=pd.Index([10, 11], name="SK_ID_CURR"))
     pipeline = DummyClassifier(strategy="prior").fit(x, [0, 1])
-    (models / "baseline.pkl").write_bytes(
+    (models / "candidate.pkl").write_bytes(
         pickle.dumps({"columns": ["income"], "pipeline": pipeline})
     )
     x.to_csv(production / "X_01.csv")

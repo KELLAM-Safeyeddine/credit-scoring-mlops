@@ -221,27 +221,28 @@ stages:
   simulate_production:
     cmd: '"creditS/Scripts/python.exe" -m src.data.simulate_production'
     deps:
+    - path: artifacts/fairness_models/candidate.pkl
+      hash: md5
+      md5: 5fdf144e1120c752f153336e9314bf84
+      size: 296643
     - path: data/processed
       hash: md5
       md5: 43e9932ad95785755dcbe2fa253f4f3c.dir
       size: 36125438
       nfiles: 16
-    - path: models/baseline.pkl
-      hash: md5
-      md5: 35d6a29fd6801964500c439733b30ccc
-      size: 288964
     - path: src/config.py
       hash: md5
       md5: be76aa4c4f2b38e3399b6c05d16308d9
       size: 3083
     - path: src/data/simulate_production.py
       hash: md5
-      md5: 225a01b6063ad021e0a731befd2e4022
-      size: 3017
+      md5: 603fb9419996cab21d7e833dac5f34f5
+      size: 6961
     params:
       params.yaml:
         data.random_state: 42
         monitoring:
+          model_filename: candidate.pkl
           n_batches: 8
           label_delay_batches: 2
           max_drift_feature_share: 0.3
@@ -250,15 +251,35 @@ stages:
           min_auc: 0.7
           income_multiplier: 0.8
           credit_multiplier: 1.2
-        paths.models: models
+          young_population_share: 0.6
+          targeted_group: F
+          targeted_score_multiplier: 0.05
+          feature_psi_threshold: 0.2
+          max_missingness_delta: 0.2
+          max_constant_emergence: 0.05
+          critical_feature_psi: 0.1
+          critical_features:
+          - AMT_INCOME_TOTAL
+          - AMT_CREDIT
+          - CREDIT_INCOME_RATIO
+          - ANNUITY_INCOME_RATIO
+          - CREDIT_TERM
+          - EXT_SOURCE_MEAN
+          max_population_psi: 0.2
+          min_group_size: 20
+          min_class_count: 5
+          auc_confidence: 0.95
+          auc_alert_rule: confidence_upper_below_floor
+          auc_bootstrap_samples: 200
+        paths.audit_models: artifacts/fairness_models
         paths.processed: data/processed
         paths.production: data/production
         runtime.python: creditS/Scripts/python.exe
     outs:
     - path: data/production
       hash: md5
-      md5: 89359577011a69783bdee3985ede7471.dir
-      size: 7462221
+      md5: 0c91131ddcd7c03d75a21d7452ba16c7.dir
+      size: 7498711
       nfiles: 33
   fairness:
     cmd: '"creditS/Scripts/python.exe" -m src.models.mitigate'
