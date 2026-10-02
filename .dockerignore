@@ -1,4 +1,5 @@
 creditS/
+.ci-venv/
 .phase1-setup-check/
 .git/
 .dvc/

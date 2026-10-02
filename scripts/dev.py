@@ -13,6 +13,7 @@ def main() -> None:
     task, *files = sys.argv[1:]
     commands = {
         "up": [sys.executable, "scripts/start_airflow.py"],
+        "demo": [sys.executable, "-m", "scripts.demo"],
         "down": ["docker", "compose", "down"],
         "test": [sys.executable, "-m", "pytest", *files],
         "lint": [sys.executable, "-m", "ruff", "check", *(files or ["."])],

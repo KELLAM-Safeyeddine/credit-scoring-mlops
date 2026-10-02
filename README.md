@@ -270,3 +270,24 @@ encore qualifié. Le lot normal 02 présente une AUC brute sous 0,70, conservée
 comme avertissement ; la règle d'alerte tient compte de l'incertitude du petit lot.
 Règles, résultats et limites : [docs/monitoring.md](docs/monitoring.md).
 Preuves : [docs/phase10-validation.md](docs/phase10-validation.md).
+
+## Boucle fermée et CI (phase 11)
+
+`make demo` entraîne et déploie v1 dans un espace synthétique séparé, détecte
+le drift avec Evidently, déclenche automatiquement un DAG Airflow de réentraînement,
+rejette v2 malgré sa meilleure AUC pour équité insuffisante, puis accepte v3
+repondéré et recharge l'API Docker. Les gates Home Credit restent inchangés.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make up
+make demo
+make test
+```
+
+Les 95 tests utilisent des fixtures générées. GitHub Actions crée `.ci-venv`,
+installe le `requirements.txt` racine, exécute Ruff et pytest puis construit
+les images Docker sans télécharger Kaggle. Le workflow distant attend la
+configuration d'un remote Git ; les commandes ont été vérifiées localement.
+Scénario et limites : [docs/demo.md](docs/demo.md).
+Preuves : [docs/phase11-validation.md](docs/phase11-validation.md).

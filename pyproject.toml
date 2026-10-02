@@ -1,7 +1,7 @@
 [tool.ruff]
 target-version = "py311"
 line-length = 100
-extend-exclude = ["creditS", ".phase1-setup-check", ".wheel-cache", ".runtime"]
+extend-exclude = ["creditS", ".ci-venv", ".phase1-setup-check", ".wheel-cache", ".runtime"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]

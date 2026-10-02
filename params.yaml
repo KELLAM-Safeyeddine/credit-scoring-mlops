@@ -92,6 +92,16 @@ mlflow:
   tracking_uri: http://localhost:5000
 api:
   log_path: runtime/api/predictions.jsonl
+demo:
+  mode: synthetic
+  threshold: 0.37
+  income_multiplier: 0.60
+  source_multiplier: 0.20
+  model:
+    n_estimators: 50
+    num_leaves: 7
+    min_child_samples: 80
+    n_jobs: 1
 monitoring:
   model_filename: candidate.pkl
   n_batches: 8

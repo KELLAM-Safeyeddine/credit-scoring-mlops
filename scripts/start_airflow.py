@@ -49,7 +49,7 @@ def prepare() -> None:
             )
             content += f"\n{key}={value}\n"
     path.write_text(content.lstrip("\n"), encoding="utf-8")
-    for directory in ("airflow", "mlflow", "mlartifacts"):
+    for directory in ("airflow", "mlflow", "mlartifacts", "demo"):
         (ROOT / "runtime" / directory).mkdir(parents=True, exist_ok=True)
     destination = ROOT / "runtime/mlflow/tracking.db"
     if not destination.exists():

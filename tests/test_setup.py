@@ -2,6 +2,7 @@
 
 import importlib.metadata
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -9,7 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def test_environment() -> None:
-    assert Path(sys.prefix).resolve() == (ROOT / "creditS").resolve()
+    expected = ROOT / (".ci-venv" if os.getenv("GITHUB_ACTIONS") == "true" else "creditS")
+    assert Path(sys.prefix).resolve() == expected.resolve()
     assert sys.version_info[:2] in {(3, 10), (3, 11)}
     installed = {dist.metadata["Name"].lower() for dist in importlib.metadata.distributions()}
     assert "apache-airflow" not in installed
