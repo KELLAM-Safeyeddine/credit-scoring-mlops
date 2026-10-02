@@ -162,3 +162,23 @@ python -m scripts.verify_fairness
 Analyse exécutée : [notebooks/03_fairness_analysis.ipynb](notebooks/03_fairness_analysis.ipynb).
 Preuves et limites : [docs/phase5-validation.md](docs/phase5-validation.md) ;
 [Model Card provisoire](docs/MODEL_CARD.md).
+
+## Quality gate et Registry (phase 6)
+
+Le gate vérifie performance, équité par genre/âge, support des groupes et preuves
+SHAP, avant tout changement d'alias. Une promotion acceptée place l'ancien
+champion sous previous. Les retries réutilisent la version du même run.
+
+Le Registry réel contient deux versions rejetées : baseline pour l'équité âge,
+repondération 1.5 pour AUC < 0.74. Aucun champion n'est actuellement disponible.
+Les promotions acceptées et la conservation des alias sont testées dans un
+Registry SQLite temporaire isolé, avec les rejets AUC et équité.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make test
+python -m scripts.verify_registry
+make promote
+```
+
+Preuves : [docs/phase6-validation.md](docs/phase6-validation.md).

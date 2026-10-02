@@ -1,4 +1,4 @@
-# Model Card — état après la phase 5
+# Model Card — état après la phase 6
 
 Projet pédagogique Home Credit Default Risk, sample_frac=0.1. Aucun modèle
 n'est promu ni destiné à prendre des décisions de crédit réelles à ce stade.
@@ -89,7 +89,10 @@ d'acceptation compris entre 0.10 et 0.95.
 
 ## Travail restant
 
-Quality gate et Registry, audit indépendant du test, API et supervision sont
-les prochaines phases. Le cadre réglementaire détaillé, les mesures de contrôle
+Quality gate et Registry sont opérationnels : les versions réelles 1 (baseline)
+et 2 (mitigation) sont rejetées respectivement pour équité âge et AUC minimale.
+Aucun champion n'est déployable actuellement. Les tests d'alias acceptés restent
+isolés du Registry du projet. Orchestration, audit indépendant du test, API et
+supervision sont les prochaines phases. Le cadre réglementaire détaillé, les mesures de contrôle
 humain, la protection des données et la surveillance seront documentés avant
 toute prétention d'utilisation réelle. Aucun déploiement réel n'est validé ici.

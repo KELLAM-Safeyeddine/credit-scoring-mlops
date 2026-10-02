@@ -12,7 +12,7 @@ PY := creditS/bin/python
 BOOTSTRAP := python3.11
 endif
 
-.PHONY: setup data train test lint mlflow fairness up down demo
+.PHONY: setup data train test lint mlflow fairness promote up down demo
 setup:
 ifeq ($(OS),Windows_NT)
 	@if not exist "$(PY)" $(BOOTSTRAP) -m venv creditS
@@ -31,6 +31,9 @@ mlflow:
 fairness:
 	"$(PY)" scripts/mlflow_server.py
 	"$(PY)" -m dvc repro explain
+promote:
+	"$(PY)" scripts/mlflow_server.py
+	"$(PY)" -m src.models.promote
 test:
 	"$(PY)" scripts/dev.py test
 lint:
