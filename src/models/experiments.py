@@ -110,9 +110,21 @@ def run_experiments(cfg: dict[str, Any]) -> dict:
     models = project_path(cfg, "models")
     models.mkdir(parents=True, exist_ok=True)
     results, bundles = [], {}
+    try:
+        importlib.metadata.version("xgboost")
+        xgboost_distribution = "xgboost"
+    except importlib.metadata.PackageNotFoundError:
+        xgboost_distribution = "xgboost-cpu"
     requirements = [
         f"{package}=={importlib.metadata.version(package)}"
-        for package in ("scikit-learn", "numpy", "pandas", "lightgbm", "xgboost", "mlflow")
+        for package in (
+            "scikit-learn",
+            "numpy",
+            "pandas",
+            "lightgbm",
+            xgboost_distribution,
+            "mlflow",
+        )
     ]
     for name in cfg["train"]["candidate_models"]:
         print(f"Training {name} on {len(xt)} rows / {len(xt.columns)} features", flush=True)

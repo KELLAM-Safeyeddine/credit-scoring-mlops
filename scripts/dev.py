@@ -12,6 +12,8 @@ def main() -> None:
         raise SystemExit("Activate creditS or call its Python executable directly.")
     task, *files = sys.argv[1:]
     commands = {
+        "up": [sys.executable, "scripts/start_airflow.py"],
+        "down": ["docker", "compose", "down"],
         "test": [sys.executable, "-m", "pytest", *files],
         "lint": [sys.executable, "-m", "ruff", "check", *(files or ["."])],
         "format-check": [sys.executable, "-m", "ruff", "format", "--check", *(files or ["."])],

@@ -181,7 +181,12 @@ def champion_version(client: mlflow.MlflowClient, name: str) -> Any:
     return client.get_model_version(name, version) if version else None
 
 
-def register_and_promote(candidate: dict, cfg: dict, client: mlflow.MlflowClient) -> dict:
+def register_and_promote(
+    candidate: dict,
+    cfg: dict,
+    client: mlflow.MlflowClient,
+    expected_pass: bool | None = None,
+) -> dict:
     """Register rejected candidates too; change champion only after all rules pass."""
     name = cfg["mlflow"]["registered_model_name"]
     if "'" in name:
@@ -192,6 +197,8 @@ def register_and_promote(candidate: dict, cfg: dict, client: mlflow.MlflowClient
         path = client.download_artifacts(current.run_id, "promotion/evidence.json")
         prod = json.loads(Path(path).read_text(encoding="utf-8"))
     passed, rules = quality_gate(candidate, prod, cfg)
+    if expected_pass is not None and passed != expected_pass:
+        raise RuntimeError("Gate changed after branching; no Registry mutation performed.")
     failed = [key for key, value in rules.items() if not value["passed"]]
     status = "accepted" if passed else "rejected"
     result = {

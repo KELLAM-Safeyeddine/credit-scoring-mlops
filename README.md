@@ -182,3 +182,26 @@ make promote
 ```
 
 Preuves : [docs/phase6-validation.md](docs/phase6-validation.md).
+
+## Orchestration Airflow (phase 7)
+
+Deux DAGs Docker orchestrent l'entraînement avec gate et la surveillance avec
+déclenchement du réentraînement. Airflow 2.11.0 et les bibliothèques ML ont des
+environnements séparés dans l'image ; Airflow reste absent du venv local.
+Les exécutions utilisent des sorties privées sous `runtime/airflow/`.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make up
+python scripts/verify_airflow.py
+python scripts/verify_airflow.py --trigger training --wait
+python scripts/verify_airflow.py --trigger monitoring --wait
+```
+
+UI : [Airflow](http://localhost:8081), [MLflow Docker](http://localhost:5001).
+Les identifiants Airflow générés se trouvent dans `.env`. Le serveur MLflow
+Docker est une copie indépendante initialisée depuis le serveur local sur 5000.
+La surveillance actuelle porte sur les lots et le candidat figés ; les scénarios
+de drift complets seront ajoutés en phase 10.
+Fonctionnement, commandes et limites : [docs/airflow.md](docs/airflow.md).
+Preuves d'exécution : [docs/phase7-validation.md](docs/phase7-validation.md).

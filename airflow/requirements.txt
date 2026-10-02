@@ -1,1 +1,1 @@
-# Squelette : a completer dans la phase correspondante.
+apache-airflow==2.11.0

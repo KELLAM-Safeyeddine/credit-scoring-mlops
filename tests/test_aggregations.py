@@ -77,8 +77,11 @@ def test_fractional_payments_are_combined_across_chunks(tmp_path: Path) -> None:
     ).to_csv(path, index=False)
     ids = pd.Index([1, 2, 3], name="SK_ID_CURR")
     result = aggregate_installments(path, ids, chunksize=1, partitions=2)
-    other = aggregate_installments(path, ids, chunksize=100, partitions=3)
+    scratch = tmp_path / "worker-scratch"
+    scratch.mkdir()
+    other = aggregate_installments(path, ids, chunksize=100, partitions=3, temp_dir=scratch)
     pd.testing.assert_frame_equal(result, other)
+    assert list(scratch.iterdir()) == []
     assert result.loc[1, "INSTALLMENTS_COUNT"] == 2
     assert result.loc[1, "INSTALLMENTS_PAYMENT_COUNT"] == 3
     assert result.loc[1, "INSTALLMENTS_DELAY_MEAN"] == 1

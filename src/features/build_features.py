@@ -1,6 +1,7 @@
 """Build financial ratios, historical aggregates and a train-fitted feature contract."""
 
 import pickle
+from pathlib import Path
 from typing import Any
 
 import numpy as np
@@ -53,12 +54,15 @@ def build_dataset(cfg: dict[str, Any]) -> dict[str, int]:
         ("use_installments", "installments_payments.csv", aggregate_installments),
     ):
         if settings[enabled]:
-            options = {
+            options: dict[str, Any] = {
                 "chunksize": settings["chunksize"],
                 "cutoff": settings["history_cutoff_days"],
             }
             if enabled == "use_installments":
                 options["partitions"] = settings["installment_partitions"]
+                options["temp_dir"] = (
+                    Path(settings["scratch_dir"]) if settings.get("scratch_dir") else output.parent
+                )
             print(f"Aggregating {filename} for {len(ids):,} client IDs", flush=True)
             aggregations.append(function(project_path(cfg, "raw") / filename, ids, **options))
     histories = pd.concat(aggregations, axis=1) if aggregations else pd.DataFrame(index=ids)

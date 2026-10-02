@@ -118,7 +118,12 @@ def aggregate_previous_application(
 
 
 def aggregate_installments(
-    path: Path, ids: pd.Index, chunksize: int = 100000, cutoff: int = 0, partitions: int = 64
+    path: Path,
+    ids: pd.Index,
+    chunksize: int = 100000,
+    cutoff: int = 0,
+    partitions: int = 64,
+    temp_dir: Path | None = None,
 ) -> pd.DataFrame:
     """Combine fractional payments per installment using bounded disk partitions."""
     keys = [ID, "SK_ID_PREV", "NUM_INSTALMENT_VERSION", "NUM_INSTALMENT_NUMBER"]
@@ -134,10 +139,13 @@ def aggregate_installments(
     }
     results = []
     # Keep each client's complete payment history in one temporary partition.
-    with tempfile.TemporaryDirectory(prefix=".features-", dir=path.parent.parent) as directory:
+    scratch = (temp_dir or path.parent.parent).resolve()
+    with tempfile.TemporaryDirectory(prefix=".features-", dir=scratch) as directory:
         temporary = Path(directory).resolve()
-        if temporary.parent != path.parent.parent.resolve():
-            raise ValueError("Temporary partitions must stay within the data directory.")
+        if temporary.parent != scratch:
+            raise ValueError(
+                "Temporary partitions must stay within the configured scratch directory."
+            )
         for chunk in _history_chunks(
             path, ids, types, chunksize, cutoff, ("DAYS_INSTALMENT", "DAYS_ENTRY_PAYMENT")
         ):

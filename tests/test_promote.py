@@ -1,6 +1,7 @@
 """Gate boundaries and actual alias promotions in an isolated SQLite Registry."""
 
 import copy
+from unittest.mock import Mock
 
 import mlflow
 import mlflow.sklearn
@@ -94,6 +95,16 @@ def test_gate_requires_comparable_production_auc(config):
     prod["evaluation_data_sha256"] = "other-split"
     passed, rules = quality_gate(candidate, prod, config)
     assert not passed and not rules["comparable_validation_data"]["passed"]
+
+
+def test_changed_branch_cannot_mutate_registry(config):
+    client = Mock()
+    client.get_registered_model.return_value.aliases = {}
+    with pytest.raises(RuntimeError, match="no Registry mutation"):
+        register_and_promote(valid_evidence(config), config, client, expected_pass=False)
+    client.log_dict.assert_not_called()
+    client.set_registered_model_alias.assert_not_called()
+    client.search_model_versions.assert_not_called()
 
 
 def test_registry_promotes_preserves_previous_and_rejects_idempotently(tmp_path, config):
