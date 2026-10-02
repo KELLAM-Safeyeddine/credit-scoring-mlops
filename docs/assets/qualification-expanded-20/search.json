@@ -1,0 +1,128 @@
+{
+  "best": null,
+  "output": "C:\\Users\\SafeyeddineK\\Desktop\\Projet\\credit-scoring-mlops\\runtime\\qualification\\da2b18cd6ffe",
+  "status": "no_eligible_candidate",
+  "test_split": "untouched",
+  "trials": [
+    {
+      "age_di": 0.7636637912881007,
+      "age_eo": 0.10728395061728391,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9642528935084766,
+      "gender_eo": 0.015192515849698385,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.0,
+      "run_id": "26dfd960acb646e89a28c17d3100ee07",
+      "threshold": 0.5700000000000001,
+      "trial": 1,
+      "validation_auc": 0.7431809486470216
+    },
+    {
+      "age_di": 0.7841562586690023,
+      "age_eo": 0.08580246913580247,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9816376446321556,
+      "gender_eo": 0.028361940106180095,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.25,
+      "run_id": "eb8c9d71004b4e628655f93d410a608f",
+      "threshold": 0.56,
+      "trial": 2,
+      "validation_auc": 0.7386198779147832
+    },
+    {
+      "age_di": 0.8030576128592465,
+      "age_eo": 0.07347989700930879,
+      "eligible": false,
+      "fair_threshold_feasible": true,
+      "gender_di": 0.9985412977269131,
+      "gender_eo": 0.058772743673006556,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.5,
+      "run_id": "340ed90ed70642af8116646c1d098499",
+      "threshold": 0.55,
+      "trial": 3,
+      "validation_auc": 0.7327215335444753
+    },
+    {
+      "age_di": 0.7503610360753218,
+      "age_eo": 0.09432098765432095,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.963544547691927,
+      "gender_eo": 0.011468481006133735,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 500,
+        "num_leaves": 7,
+        "reg_lambda": 10.0
+      },
+      "power": 1.0,
+      "run_id": "7258e68dd9db48c4b54b3d1b795721ca",
+      "threshold": 0.55,
+      "trial": 4,
+      "validation_auc": 0.7433169732534134
+    },
+    {
+      "age_di": 0.7932197284289102,
+      "age_eo": 0.10124116986862086,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9870140039837609,
+      "gender_eo": 0.03404463687438786,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 500,
+        "num_leaves": 7,
+        "reg_lambda": 10.0
+      },
+      "power": 1.25,
+      "run_id": "5f3d7f61dfa04979928201130518b126",
+      "threshold": 0.5700000000000001,
+      "trial": 5,
+      "validation_auc": 0.7381084977926979
+    },
+    {
+      "age_di": 0.8068372148588114,
+      "age_eo": 0.06915560837129464,
+      "eligible": false,
+      "fair_threshold_feasible": true,
+      "gender_di": 0.9953739719703335,
+      "gender_eo": 0.03508839750528325,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 500,
+        "num_leaves": 7,
+        "reg_lambda": 10.0
+      },
+      "power": 1.5,
+      "run_id": "711a77718eb94921866b25337f357a3f",
+      "threshold": 0.56,
+      "trial": 6,
+      "validation_auc": 0.7315187530177414
+    }
+  ]
+}

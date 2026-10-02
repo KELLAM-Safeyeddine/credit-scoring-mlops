@@ -229,6 +229,8 @@ de production dans un dataset d'entraînement n'est pas implémentée.
 [Airflow](docs/airflow.md), [Model Card](docs/MODEL_CARD.md).
 [Recherche complémentaire de qualification](docs/qualification.md) : 18 essais,
 aucun candidat franchissant simultanément les seuils d'AUC et d'équité.
+Une campagne supplémentaire à 20 % des données conserve les réserves existantes ;
+ses six essais ne fournissent pas davantage de champion qualifiable.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les dernières validations.

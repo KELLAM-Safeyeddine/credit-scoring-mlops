@@ -1,9 +1,12 @@
 """Qualification search must preserve gates and reject unsafe search definitions."""
 
 import json
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
+from mlflow import MlflowClient
 
 from src.models.qualify import eligible, search, specifications
 
@@ -61,3 +64,62 @@ def test_search_rejects_overlapping_splits_before_fitting(config, tmp_path, monk
         search(config, tmp_path / "output")
     assert len(seen) == 6
     assert not (tmp_path / "output").exists()
+
+
+def test_expansion_provenance_survives_multiple_runs(config, tmp_path, monkeypatch):
+    """A temporary lock filename must not overwrite the expanded snapshot directory."""
+    config["qualification"].update(
+        snapshot_root=str(tmp_path),
+        max_trials=2,
+        reweighing_powers=[1.0, 1.25],
+        configurations=[config["qualification"]["configurations"][0]],
+    )
+    config["mlflow"]["tracking_uri"] = f"sqlite:///{(tmp_path / 'tracking.db').as_posix()}"
+    for split, start in (("train", 1), ("val", 5)):
+        index = pd.Index(range(start, start + 4), name="SK_ID_CURR")
+        for name, frame in (
+            ("X", pd.DataFrame({"AMT_CREDIT": [100, 200, 300, 400]}, index=index)),
+            ("y", pd.DataFrame({"TARGET": [0, 1, 0, 1]}, index=index)),
+            (
+                "sensitive",
+                pd.DataFrame(
+                    {
+                        "CODE_GENDER": ["F", "M", "F", "M"],
+                        "AGE_GROUP": ["<30", "30-45", "45-60", "60+"],
+                    },
+                    index=index,
+                ),
+            ),
+        ):
+            frame.to_csv(tmp_path / f"{name}_{split}.csv")
+    (tmp_path / "feature_columns.json").write_text('["AMT_CREDIT"]')
+    (tmp_path / "feature_encoder.pkl").write_bytes(b"unused fixture artifact")
+    for name in ("processed.dvc", "interim.dvc"):
+        (tmp_path / name).write_text("outs:\n- md5: fixture.dir\n")
+    (tmp_path / "split_manifest.json").write_text("{}")
+
+    class FixturePipeline:
+        def fit(self, *args, **kwargs):
+            return self
+
+        def predict_proba(self, frame):
+            scores = np.array([0.1, 0.8, 0.2, 0.7])
+            return np.column_stack([1 - scores, scores])
+
+    monkeypatch.setattr("src.models.qualify.project_path", lambda *args: tmp_path)
+    monkeypatch.setattr("src.models.qualify.build_pipeline", lambda *args: FixturePipeline())
+    monkeypatch.setattr("src.models.qualify.data_provenance", lambda *args: ({}, b"fixture lock"))
+    monkeypatch.setattr("src.models.qualify.select_fair_threshold", lambda *args: (0.5, False))
+    result = search(config, tmp_path / "output")
+    assert result["status"] == "no_eligible_candidate"
+    assert len(result["trials"]) == 2
+    client = MlflowClient(config["mlflow"]["tracking_uri"])
+    for trial in result["trials"]:
+        run = client.get_run(trial["run_id"])
+        assert run.info.status == "FINISHED"
+        assert run.data.tags["qualification_processed_dvc_hash"] == "fixture.dir"
+        names = {
+            Path(item.path).name
+            for item in client.list_artifacts(trial["run_id"], "provenance/expansion")
+        }
+        assert names == {"processed.dvc", "interim.dvc", "split_manifest.json"}

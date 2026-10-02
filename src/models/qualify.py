@@ -14,6 +14,7 @@ from uuid import uuid4
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+import yaml
 
 from src.config import ROOT, load_config, project_path, write_json
 from src.features.contracts import EXCLUDED
@@ -83,6 +84,13 @@ def search(cfg: dict, output: Path) -> dict:
         raise ValueError("Qualification train/validation must be disjoint.")
     weights = reweighing_weights(yt, intersection_groups(st))
     provenance, lock = data_provenance(ROOT, processed)
+    expansion_root = cfg["qualification"].get("snapshot_root")
+    if expansion_root:
+        expansion_root = Path(expansion_root)
+        descriptor = expansion_root / "processed.dvc"
+        tracked = yaml.safe_load(descriptor.read_text(encoding="utf-8"))
+        provenance["qualification_processed_dvc_hash"] = tracked["outs"][0]["md5"]
+        provenance["dvc_lock_scope"] = "original pipeline; expanded data in processed.dvc artifact"
     output.mkdir(parents=True, exist_ok=False)
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
     mlflow.set_experiment("credit-scoring-qualification")
@@ -133,6 +141,9 @@ def search(cfg: dict, output: Path) -> dict:
             mlflow.log_dict(trial, "params.json")
             mlflow.log_dict(columns, "feature_columns.json")
             mlflow.log_artifact(str(processed / "feature_encoder.pkl"), "features")
+            if expansion_root:
+                for filename in ("processed.dvc", "interim.dvc", "split_manifest.json"):
+                    mlflow.log_artifact(str(expansion_root / filename), "provenance/expansion")
             with tempfile.TemporaryDirectory(prefix="credit-qualification-") as temporary:
                 snapshot = Path(temporary) / "dvc.lock"
                 snapshot.write_bytes(lock)

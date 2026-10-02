@@ -59,3 +59,86 @@ Les essais répétés sur la même validation peuvent surajuster la sélection.
 Une suite raisonnable est une campagne préspécifiée sur davantage de données,
 avec un budget mémoire adapté, puis une évaluation indépendante du candidat figé.
 Le test actuellement réservé doit rester hors de toute sélection ou réglage.
+
+## Campagne étendue à 20 % des données
+
+Une seconde campagne double les données le 2 octobre 2026, avec environ 2,4 Go
+de RAM libre au départ : 61 502 clients, dont 29 520 train, 9 840 validation,
+9 840 test et 12 302 production. Tous les clients de la première campagne
+conservent leur affectation. Seuls les clients jusque-là exclus sont répartis
+de façon stratifiée entre les quatre splits. Le test est préparé et transformé
+pour la cohérence des exports ; ses labels et scores ne servent à aucune
+sélection, comparaison de modèles ou évaluation dans cette campagne.
+
+Les catégories sont apprises à nouveau uniquement sur le train étendu :
+le nouveau contrat contient **264 features**, identiques pour les quatre splits.
+Il est distinct du contrat historique à 261 features et n'est pas déployé.
+Les fichiers historiques `data/interim` et `data/processed` restent inchangés.
+
+La campagne est préspécifiée à six essais : configurations à 7 feuilles de
+la première campagne, repondération 1,0 / 1,25 / 1,5. Les gates sont inchangés.
+
+| Essai | Puissance | AUC validation | DI âge | Écart EO âge | Seuil équitable et utile trouvé |
+|---|---:|---:|---:|---:|---|
+| 1 | 1,0 | 0,74318 | 0,76366 | 0,10728 | Non |
+| 2 | 1,25 | 0,73862 | 0,78416 | 0,08580 | Non |
+| 3 | 1,5 | 0,73272 | 0,80306 | 0,07348 | Oui, AUC insuffisante |
+| 4 | 1,0 | 0,74332 | 0,75036 | 0,09432 | Non |
+| 5 | 1,25 | 0,73811 | 0,79322 | 0,10124 | Non |
+| 6 | 1,5 | 0,73152 | 0,80684 | 0,06916 | Oui, AUC insuffisante |
+
+**Aucun candidat qualifiable** dans les six runs terminés de la campagne
+`da2b18cd6ffe`. Les alias Home Credit restent vides aux ports 5000 et 5001.
+Le gate final et SHAP ne sont pas exécutés sur ces candidats éliminés en amont.
+Cette expérience ne prouve pas qu'un champion conforme est impossible :
+augmenter l'échantillon seul ne résout pas ici le compromis performance/équité.
+La validation étendue comprend des clients de la validation historique déjà
+consultée ; elle ne constitue pas une évaluation indépendante finale.
+
+Le snapshot est suivi dans un dépôt DVC sans SCM isolé, sous
+`runtime/qualification-expanded-20/`, et poussé au même remote local :
+
+- interim : `c6aa5659095e6f56e14037f470cadb74.dir` ;
+- processed : `df0b7377bfe4fa4d60f8ac341224774e.dir`, 16 fichiers, 72 910 177 octets ;
+- 22 fichiers poussés, incluant les manifests de répertoires.
+
+Chaque run MLflow contient le hash DVC du processed étendu, les deux descripteurs,
+le manifeste des splits, les hashes exacts des entrées train/validation et son
+nouvel encodeur. Le `dvc.lock` historique est explicitement marqué comme snapshot
+du pipeline initial, sans prétendre décrire le nouveau snapshot.
+[Preuves et configurations](assets/qualification-expanded-20/search.json).
+
+Pour récupérer le snapshot dans un clone ayant accès au même remote local :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+$qualificationPython = (Resolve-Path .\creditS\Scripts\python.exe).Path
+New-Item -ItemType Directory runtime/qualification-expanded-20 -Force | Out-Null
+Copy-Item docs/assets/qualification-expanded-20/*.dvc runtime/qualification-expanded-20/
+Copy-Item docs/assets/qualification-expanded-20/split_manifest.json runtime/qualification-expanded-20/
+Push-Location runtime/qualification-expanded-20
+# Initialisation seulement si .dvc n'existe pas encore.
+if (-not (Test-Path .dvc)) {
+    & $qualificationPython -m dvc init --no-scm
+    $qualificationRemote = (Resolve-Path ../../../dvc-storage).Path
+    & $qualificationPython -m dvc remote add -d local $qualificationRemote
+}
+& $qualificationPython -m dvc pull
+Pop-Location
+python -m src.models.qualify --params docs/assets/qualification-expanded-20/params.yaml
+python -m pytest -q
+```
+
+Pour reconstruire une expansion dans un **nouveau** dossier, utiliser
+`python -m src.data.expand_development --output runtime/une-nouvelle-campagne --fraction 0.2`,
+puis `src.features.build_features --params` avec le `params.yaml` généré.
+Le script refuse d'écraser un dossier existant et rejette les memberships qui
+se recouvrent, les IDs absents de la source ou une fraction qui n'ajoute aucun client.
+Le test de régression MLflow vérifie l'enregistrement de la provenance sur deux
+runs successifs : une variable temporaire du premier run ne peut plus remplacer
+le chemin du snapshot du suivant. La tentative interrompue reste visible dans
+MLflow ; les six résultats du tableau proviennent uniquement de la relance terminée.
+
+Validation finale exécutée dans `creditS` : **109 tests réussis en 30,92 secondes**,
+25 avertissements connus, Ruff sans erreur et 82 fichiers Python formatés.
+Les six runs ont le statut `FINISHED` et portent le hash DVC attendu.
