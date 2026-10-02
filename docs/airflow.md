@@ -61,7 +61,9 @@ alert_branch → trigger_training | no_alert`.
 Les rapports HTML et JSON utilisent réellement Evidently 0.7.20 (API `Report` et
 `Dataset`). Les colonnes sont celles du modèle ; le PSI des features variables et
 du score est comparé à la référence de validation figée. Les constantes de référence
-sont comptées mais exclues du test PSI. Fairlearn mesure l'acceptation par genre et
+sont exclues du PSI mais contrôlées pour l'apparition de nouvelles valeurs ;
+les proportions de valeurs manquantes sont également contrôlées.
+Fairlearn mesure l'acceptation par genre et
 âge. AUC et audit des taux de défaut ne sont calculés qu'après disponibilité des
 labels selon le manifeste et `observed_batch`.
 
@@ -71,8 +73,13 @@ le déclenchement sur une différence de score, utiliser `{"batch_id": "01",
 "max_score_psi": 0.0}`. Le `TriggerDagRunOperator` crée une exécution d'entraînement
 identifiée par le run de monitoring ; son retry ne crée pas une seconde exécution.
 
-Actuellement, les lots sont les lots normaux de la phase 3 et leurs prédictions
-proviennent d'un candidat baseline rejeté, explicitement identifié comme tel.
-Cette surveillance est diagnostique, sans service champion déployé. Les scénarios
-de drift 04–08, les rapports de performance Evidently complets et la validation de
-l'absence d'alertes sur les lots normaux sont prévus en phase 10.
+Les huit scénarios de phase 10 sont opérationnels : 01–03 sans alerte, 04–08 avec
+alertes après réception des labels. Les prédictions proviennent du candidat mitigé
+figé, identifié comme diagnostic, sans champion Home Credit déployé. Les règles
+et résultats sont détaillés dans `docs/monitoring.md`.
+
+Les DAGs `credit_demo` et `credit_demo_retraining` réalisent une boucle séparée
+sur des fixtures synthétiques : v1 accepté, drift Evidently, trigger automatique,
+v2 meilleur mais rejeté pour équité, v3 repondéré accepté et API Docker rechargée.
+Les modèles Registry `credit-demo-*` sont distincts de `credit-scoring`.
+Voir `docs/demo.md` pour les limites de ce scénario.

@@ -17,6 +17,18 @@ from scripts.verify_packaging import IMAGE, docker, request
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def home_credit_aliases(client) -> dict | None:
+    """Keep an absent Home Credit Registry valid for a fresh-checkout synthetic demo."""
+    from mlflow.exceptions import MlflowException
+
+    try:
+        return dict(client.get_registered_model("credit-scoring").aliases)
+    except MlflowException as error:
+        if error.error_code != "RESOURCE_DOES_NOT_EXIST":
+            raise
+        return None
+
+
 def main() -> None:
     """Preserve Home Credit aliases and clean up only the API created by this invocation."""
     if Path(sys.prefix).resolve() != (ROOT / "creditS").resolve():
@@ -24,7 +36,7 @@ def main() -> None:
     from mlflow import MlflowClient
 
     client = MlflowClient(tracking_uri="http://127.0.0.1:5001")
-    before = client.get_registered_model("credit-scoring").aliases
+    before = home_credit_aliases(client)
     uid = uuid4().hex[:12]
     directory = ROOT / "runtime/demo" / uid
     directory.mkdir(parents=True)
@@ -107,7 +119,7 @@ def main() -> None:
         )
         aliases = client.get_registered_model(name).aliases
         assert aliases == {"champion": gates[2]["version"], "previous": gates[0]["version"]}
-        assert client.get_registered_model("credit-scoring").aliases == before
+        assert home_credit_aliases(client) == before
         proof = {
             "mode": "synthetic-not-home-credit",
             "demo_id": uid,

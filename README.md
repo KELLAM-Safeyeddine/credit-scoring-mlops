@@ -1,293 +1,232 @@
-# Scoring de crédit explicable et équitable
+# Scoring de crédit explicable et équité mesurée
 
-Chaîne imposée : DVC → MLflow → Airflow → Docker → FastAPI → Evidently.
-Projet pédagogique, en construction phase par phase. Phases 1 à 3 réalisées : environnement, données validées et feature engineering reproductible avec DVC.
-Les DAGs, Dockerfiles et services restent à implémenter dans leurs phases dédiées.
+Projet pédagogique Home Credit Default Risk : versionner les données, comparer
+les modèles, mesurer leurs biais, appliquer un quality gate avant promotion,
+servir des explications SHAP et déclencher un réentraînement sur alerte.
 
-## Installation Windows PowerShell
+**DVC → MLflow → Airflow → Docker → FastAPI → Evidently.**
+Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
+La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
+et API rechargée est exécutée sur un scénario synthétique séparé.
 
-Python 3.11.9 ou une version 3.11 plus récente est recommandé. Python 3.11 est utilisé explicitement (le Python système peut être différent).
-Création initiale, seule commande de bootstrap exécutée hors du venv :
+**État vérifié le 2 octobre 2026 : 96 tests passent, builds Docker réussis,
+démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
+Le meilleur LightGBM échoue à l'équité par âge ; le candidat repondéré respecte
+les seuils d'équité étudiés mais son AUC 0,7311 est sous le minimum 0,74.
+Les résultats synthétiques ne qualifient pas un usage réel de crédit.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Z[Archive Kaggle] --> D[DVC : données et artefacts]
+    D --> A[Airflow : préparation et entraînement]
+    A --> M[MLflow : runs, métriques, SHAP]
+    M --> G{Quality gate}
+    G -->|Rejet| R[Version rejected, alias conservés]
+    G -->|Acceptation| C[Registry : champion et previous]
+    C --> F[FastAPI dans Docker : predict et explain]
+    F --> L[Journaux pseudonymisés]
+    P[Lots simulés et labels retardés] --> E[Evidently et audit Fairlearn]
+    L -.->|Adaptateur ; jointure audit séparée| E
+    E --> B{Alerte}
+    B -->|Oui : TriggerDagRunOperator| A
+    B -->|Non| H[Rapports archivés]
+```
+
+La surveillance Home Credit utilise actuellement un candidat figé de diagnostic.
+L'adaptateur des logs API est testé ; le DAG courant consomme les lots simulés.
+La promotion Home Credit et le rechargement API restent des opérations distinctes.
+Les DAGs de démonstration réalisent automatiquement les deux.
+[Détails d'architecture](docs/architecture.md).
+
+## Installation
+
+Prérequis : Git, Python **3.11.9 ou plus récent dans la série 3.11**, Docker
+avec conteneurs Linux et Docker Compose. Python 3.10 est autorisé par les scripts,
+mais l'environnement et la CI de ce dépôt sont vérifiés avec Python 3.11.9.
+GNU Make est fourni dans `creditS` par `gnumake` sous Windows ; utiliser GNU Make
+système sous Linux/macOS. Airflow s'installe exclusivement dans ses images Docker.
+
+Création initiale Windows, seule exception au venv pour son bootstrap :
 
 ```powershell
-if (-not (Test-Path creditS\Scripts\python.exe)) {
-    if (Test-Path .runtime\python311\tools\python.exe) {
-        & .runtime\python311\tools\python.exe -m venv creditS
-    } else {
-        py -3.11 -m venv creditS # Python 3.11.9+ requis
-    }
-}
+py -3.11 -m venv creditS
 .\creditS\Scripts\Activate.ps1
 python -c "import sys; print(sys.prefix)"
 python -m pip install gnumake==4.4.1
 make setup
-make test
-make lint
 ```
 
-GNU Make est fourni localement par gnumake dans creditS ; aucune installation globale.
-Avec GNU Make déjà installé, `make setup` crée directement creditS s'il est absent.
-Sur cette machine, un runtime Python 3.11.9 signé par la Python Software Foundation est conservé dans `.runtime/python311/tools/` et ignoré par Git et Docker ; le Makefile le préfère pour créer creditS. Evidently ne pouvait pas être importé avec le Python 3.11.0 initial.
+Si `creditS` existe déjà, commencer directement par son activation.
+Le Makefile peut aussi le créer avec le runtime local ignoré `.runtime/python311/tools/`
+s'il existe. Les dépendances locales sont épinglées dans `requirements.txt` ;
+les images utilisent leurs propres requirements et locks. `creditS/` est exclu
+de Git et des images Docker. Aucun paquet global n'est nécessaire.
 
-Les cibles utilisent toujours le Python de creditS et ne nécessitent pas d'activation persistante.
-Airflow ne sera installé que dans Docker.
-
-## Linux / macOS
-
-Installer GNU Make comme prérequis système ; `make setup` utilise Python 3.11.
+Création initiale Linux/macOS :
 
 ```bash
 python3.11 -m venv creditS
 source creditS/bin/activate
 make setup
-make test
 ```
 
-Sous Linux/macOS, adapter les deux entrées des hooks locaux dans
-`.pre-commit-config.yaml` vers `creditS/bin/python`.
+Sous Linux/macOS, remplacer `runtime.python` dans `params.yaml` par
+`creditS/bin/python` et les deux entrées de `.pre-commit-config.yaml` par
+`creditS/bin/python scripts/dev.py ...`. Les hooks Windows sont conservés
+pour l'environnement vérifié ici.
 
-## État et conventions
+## Quickstart Windows
 
-- Archive Kaggle conservée à la racine et ignorée ; extraction idempotente via `make data`.
-- `sample_frac: 0.1` en développement ; `1.0` pour les expériences finales.
-- `CODE_GENDER` exclu des features ; genre et âge réservés à l'audit.
-- `TARGET=1` signifie défaut ; acceptation = 1 − décision de défaut.
-- Copie manuelle de `.env.example` vers `.env` ; renseigner les secrets localement.
-- Docker Desktop doit être démarré avant les phases utilisant les conteneurs.
-- `make data` extrait et valide ; `make train` exécute les quatre stages DVC.
-- Les cibles up/down/demo restent à implémenter dans leurs phases dédiées.
-- Dépendances directes épinglées dans `requirements.txt`, inventaire complet de
-  l'environnement Windows dans `requirements-lock-windows.txt` après installation.
-- Les données et les environnements ne doivent jamais être versionnés dans Git.
+Conserver l'archive Kaggle `.zip` à la racine ; son nom est détecté.
+Elle contient les neuf tables attendues, dont `HomeCredit_columns_description.csv`.
+Le remote DVC local doit être accessible pour une restauration.
 
-Les résultats de performance et d'équité seront documentés après mesure.
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m dvc pull
+make up
+docker compose up -d
+docker compose ps
+curl.exe -i http://localhost:8000/live
+curl.exe -i http://localhost:8000/health
+make test
+make demo
+```
 
+`make up` génère les entrées manquantes de `.env`, construit les images et attend
+les healthchecks ; `docker compose up -d` peut ensuite relancer la stack.
+Les secrets générés restent privés. `/live` répond 200 ; `/health` et le scoring
+principal répondent 503 tant qu'aucun champion n'est qualifié. Les cinq services
+peuvent donc être healthy sans modèle prêt au scoring.
 
+| Service | Accès par défaut |
+| --- | --- |
+| API FastAPI | http://localhost:8000/docs |
+| MLflow Docker | http://localhost:5001 |
+| Airflow | http://localhost:8081 |
+| MLflow local, démarré par `make mlflow` | http://localhost:5000 |
 
+Les identifiants Airflow sont dans `.env`. Les deux serveurs MLflow ont des bases
+indépendantes ; Docker reçoit une copie initiale de la base locale si elle existe.
+DVC restaure les fichiers, **pas** les bases MLflow ni leurs runs.
+Le remote résolu ici est le dossier frère `../dvc-storage` ; `../../dvc-storage`
+dans `.dvc/config` est relatif au dossier `.dvc`. Pour changer de remote,
+utiliser `python -m dvc remote modify storage url <chemin>` après activation.
+Sans remote, `make data` extrait et valide l'archive présente.
 
-## Données et pipeline DVC (phase 2)
+## Entraînement et gate
 
 ```powershell
 .\creditS\Scripts\Activate.ps1
 make data
-python -m dvc repro
-python -m scripts.verify_data_pipeline
-python -m dvc push
-python -m dvc status --cloud
-```
-
-Sur une copie du dépôt avec accès au remote, utiliser `python -m dvc pull` pour
-restaurer les données et sorties. Remote local actuel : `../dvc-storage`.
-Les stages exécutent explicitement le Python de creditS. Sous Linux/macOS,
-adapter `runtime.python` dans `params.yaml` vers `creditS/bin/python`.
-
-La réserve production est isolée avant le split stratifié 60/20/20 du reste.
-Sur sample_frac=0.1 : train 14 760, validation 4 920, test 4 920, production 6 151.
-Le modèle logistique numérique de référence atteint AUC validation 0,7345,
-PR-AUC 0,2151, seuil métier 0,09. Il n'est pas promu : les évaluations d'équité,
-SHAP et le quality gate n'ont pas encore été implémentés.
-Les huit lots sont normaux à ce stade ; les scénarios de drift arriveront en phase 10.
-Les agrégations et ratios arriveront en phase 3, les expériences MLflow en phase 4.
-
-Preuves d'exécution et limites : [docs/phase2-validation.md](docs/phase2-validation.md).
-Le test de régénération a confirmé 54 fichiers identiques par SHA-256 après
-réexécution forcée sans cache d'exécution.
-
-
-## Nettoyage et features (phase 3)
-
-Les agrégations bureau/previous_application/installments_payments sont maintenant
-opérationnelles. Les ratios financiers, 14 agrégats historiques et l'encodage
-ajusté sur le train produisent 261 features. L'historique est filtré au jour de la
-demande ; les versements fractionnés sont regroupés par échéance.
-
-Conformément au choix utilisateur, EMPLOYED_AGE_RATIO est calculé pour l'audit,
-puis exclu du modèle comme les autres variables d'âge et CODE_GENDER.
-Les splits de phase 2 restent inchangés. Le vocabulaire et l'encodeur sont
-sauvegardés dans data/processed ; l'imputation et la standardisation sont ajustées
-uniquement sur le train. Les NaN attendus sont documentés dans le manifeste.
-
-La référence logistique fixe atteint AUC validation 0,7210 (phase 2 : 0,7345) ;
-la comparaison des familles de modèles arrivera en phase 4. Aucun modèle n'est promu.
-29 tests passent et une seconde exécution sans cache reproduit 56 fichiers identiques.
-
-Détails et preuves : [docs/phase3-validation.md](docs/phase3-validation.md).
-L'EDA du train, exécutée, est dans [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb).
-
-## Expérimentation MLflow (phase 4)
-
-MLflow 3.10.1 utilise SQLite et un dossier d'artefacts local. Les quatre familles
-utilisent les mêmes splits et features ; le test est réservé. AUC validation :
-logistique 0,7210 ; Random Forest 0,7240 ; XGBoost 0,7372 ; LightGBM 0,7487.
-Le candidat LightGBM utilise un seuil métier de 0,49 après une recherche limitée
-à six configurations sur validation. Il attend les contrôles d'équité et SHAP,
-puis le quality gate : aucun modèle n'est encore promu.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
 make mlflow
 make train
-make test
-python -m scripts.verify_experiments
-```
-
-UI : [MLflow](http://localhost:5000/#/experiments/1).
-Les métriques, paramètres, modèles, encodeurs et hashes des données sont loggés.
-Le tag du lock identifie le snapshot avant entraînement, archivé sans modification.
-Les scores ne sont pas des probabilités de défaut calibrées.
-La sélection sur validation peut être optimiste ; le test final reste nécessaire.
-Preuves : [docs/phase4-validation.md](docs/phase4-validation.md).
-Comparaison exécutée : [notebooks/02_baseline.ipynb](notebooks/02_baseline.ipynb).
-
-## Explicabilité et équité (phase 5)
-
-SHAP explique baseline et candidat : summary, bar et trois waterfalls par modèle,
-avec contrôle d'additivité. Fairlearn MetricFrame audite l'acceptation, le rappel
-du défaut et le FPR, par genre et âge. Les groupes insuffisants sont signalés.
-Reweighing, ThresholdOptimizer et ExponentiatedGradient sont comparés sur validation.
-
-Reweighing 1.5 atteint AUC 0,7311 (perte 1,75 point), DI genre/âge 0,987/0,814,
-et écarts TPR 0,015/0,092. Il respecte les seuils d'équité de cette étude et
-utilise un seuil global sans attribut sensible à l'inférence. Il reste sous
-le minimum AUC 0,74 du futur quality gate, et n'est pas promu.
-La prédiction auxiliaire du genre atteint AUC 0,8734, signalant des proxys possibles.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
-make fairness
-make test
-python -m scripts.verify_fairness
-```
-
-Analyse exécutée : [notebooks/03_fairness_analysis.ipynb](notebooks/03_fairness_analysis.ipynb).
-Preuves et limites : [docs/phase5-validation.md](docs/phase5-validation.md) ;
-[Model Card provisoire](docs/MODEL_CARD.md).
-
-## Quality gate et Registry (phase 6)
-
-Le gate vérifie performance, équité par genre/âge, support des groupes et preuves
-SHAP, avant tout changement d'alias. Une promotion acceptée place l'ancien
-champion sous previous. Les retries réutilisent la version du même run.
-
-Le Registry réel contient deux versions rejetées : baseline pour l'équité âge,
-repondération 1.5 pour AUC < 0.74. Aucun champion n'est actuellement disponible.
-Les promotions acceptées et la conservation des alias sont testées dans un
-Registry SQLite temporaire isolé, avec les rejets AUC et équité.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
-make test
-python -m scripts.verify_registry
 make promote
-```
-
-Preuves : [docs/phase6-validation.md](docs/phase6-validation.md).
-
-## Orchestration Airflow (phase 7)
-
-Deux DAGs Docker orchestrent l'entraînement avec gate et la surveillance avec
-déclenchement du réentraînement. Airflow 2.11.0 et les bibliothèques ML ont des
-environnements séparés dans l'image ; Airflow reste absent du venv local.
-Les exécutions utilisent des sorties privées sous `runtime/airflow/`.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
-make up
-python scripts/verify_airflow.py
-python scripts/verify_airflow.py --trigger training --wait
-python scripts/verify_airflow.py --trigger monitoring --wait
-```
-
-UI : [Airflow](http://localhost:8081), [MLflow Docker](http://localhost:5001).
-Les identifiants Airflow générés se trouvent dans `.env`. Le serveur MLflow
-Docker est une copie indépendante initialisée depuis le serveur local sur 5000.
-La surveillance porte sur huit lots simulés et un candidat figé. Elle évalue
-les dérives et déclenche le DAG de réentraînement sous contrôle du quality gate.
-Fonctionnement, commandes et limites : [docs/airflow.md](docs/airflow.md).
-Preuves d'exécution : [docs/phase7-validation.md](docs/phase7-validation.md).
-
-## Service FastAPI (phase 8)
-
-L'API expose `/predict`, `/explain`, `/model-info`, `/health` et un rechargement
-protégé `/model/reload`. Elle charge un champion accepté, conserve le contrat
-des features et journalise les événements avec un identifiant client HMAC.
-Les données d'audit ne sont pas acceptées dans les payloads.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
-make serve
-```
-
-[Documentation interactive](http://localhost:8000/docs).
-Sans champion accepté, les routes de scoring et le health répondent 503.
-Les performances offline ne qualifient pas automatiquement les entrées partielles
-de ce contrat API. Les réponses réussies et le changement de version sont testés
-avec un Registry synthétique isolé.
-Contrat, exemples et limites : [docs/api.md](docs/api.md).
-Preuves : [docs/phase8-validation.md](docs/phase8-validation.md).
-
-## Packaging Docker (phase 9)
-
-La stack démarre PostgreSQL, MLflow, Airflow webserver/scheduler et l'API FastAPI.
-L'image API multi-stage utilise un utilisateur non-root et ses propres
-dépendances épinglées ; le venv local et les secrets sont exclus.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
-make up
-docker compose ps
-curl.exe -i http://localhost:8000/live
-curl.exe -i http://localhost:8000/health
-python scripts/verify_packaging.py
-```
-
-API : [docs](http://localhost:8000/docs), MLflow : [UI](http://localhost:5001),
-Airflow : [UI](http://localhost:8081). Les cinq services sont sains ; le scoring
-principal reste indisponible (503) tant qu'un champion n'est pas accepté.
-Le test Docker isolé valide un scoring à 200 avec un Registry MLflow HTTP
-synthétique séparé, sans modifier le Registry Home Credit.
-Configuration et persistance : [docs/docker.md](docs/docker.md).
-Preuves : [docs/phase9-validation.md](docs/phase9-validation.md).
-
-## Surveillance Evidently (phase 10)
-
-Evidently 0.7.20 produit les rapports de données, scores, population et performance.
-Fairlearn mesure l'équité par genre et âge ; les labels deviennent disponibles
-après deux lots. Les lots 01–03 ne déclenchent aucune alerte ; 04–08 déclenchent
-les alertes attendues après disponibilité des labels.
-
-```powershell
-.\creditS\Scripts\Activate.ps1
 make monitor
-python -m src.monitoring.run_batches --batch-id 08 --observed-batch 8
-python scripts/verify_airflow.py --trigger monitoring --batch-id 01 --normal-thresholds --expect-no-alert --wait
-python scripts/verify_airflow.py --trigger monitoring --batch-id 08 --observed-batch 10 --normal-thresholds --wait
 ```
 
-Les rapports sont archivés dans `reports/monitoring/`. La surveillance utilise
-le candidat mitigé figé pour le diagnostic : aucun champion Home Credit n'est
-encore qualifié. Le lot normal 02 présente une AUC brute sous 0,70, conservée
-comme avertissement ; la règle d'alerte tient compte de l'incertitude du petit lot.
-Règles, résultats et limites : [docs/monitoring.md](docs/monitoring.md).
-Preuves : [docs/phase10-validation.md](docs/phase10-validation.md).
+Sur une nouvelle base MLflow, les sorties restaurées de DVC peuvent référencer
+d'anciens runs absents. Après démarrage du serveur local, utiliser
+`python -m dvc repro --force` pour recréer des runs et leurs preuves ; cela
+réentraîne toutes les étapes. Les modèles précédents ne sont pas automatiquement
+qualifiés par une restauration de fichiers.
 
-## Boucle fermée et CI (phase 11)
+`sample_frac=0.1` garde le développement rapide ; `1.0` est réservé à une nouvelle
+campagne finale. La réserve de production est isolée avant le split stratifié
+60/20/20 du reste de `application_train.csv`. Effectifs mesurés : train 14 760,
+validation 4 920, test 4 920, production 6 151. `application_test.csv` n'a pas
+de cible et ne sert pas à l'évaluation supervisée.
 
-`make demo` entraîne et déploie v1 dans un espace synthétique séparé, détecte
-le drift avec Evidently, déclenche automatiquement un DAG Airflow de réentraînement,
-rejette v2 malgré sa meilleure AUC pour équité insuffisante, puis accepte v3
-repondéré et recharge l'API Docker. Les gates Home Credit restent inchangés.
+Les encodeurs et imputations sont ajustés sur le train. Les ratios et agrégations
+historiques produisent 261 colonnes ordonnées ; les échéances sont regroupées
+et l'historique limité au jour de demande. Genre, âge et `EMPLOYED_AGE_RATIO`
+restent réservés à l'audit. `TARGET=1` et une décision positive signifient défaut
+et refus ; l'acceptation vaut `1 − prédiction`.
+
+Le gate exige AUC ≥ 0,74, baisse ≤ 0,005 face au champion sur les mêmes données
+de validation, DI acceptation ≥ 0,8 et écart d'égalité des chances ≤ 0,10 pour
+genre et âge. Il vérifie les supports, le recall ≥ 0,50, le taux d'acceptation
+entre 0,10 et 0,95, les artefacts SHAP et une inférence déterministe sans attribut
+sensible. Un rejet enregistre la version et ses règles échouées, sans déplacer
+`champion`. Une acceptation place l'ancien champion sous `previous`.
+
+## Résultats Home Credit
+
+Validation uniquement, échantillon de développement ; test indépendant réservé.
+Les seuils minimisent un coût configurable (défaut manqué : 10, faux refus : 1),
+avec contraintes supplémentaires lors de la mitigation.
+
+| Modèle | ROC-AUC | PR-AUC | Seuil de refus |
+| --- | ---: | ---: | ---: |
+| Régression logistique | 0,7210 | 0,1984 | 0,09 |
+| Random Forest | 0,7240 | 0,2339 | 0,09 |
+| XGBoost | 0,7372 | 0,2284 | 0,07 |
+| LightGBM | 0,7487 | 0,2427 | 0,49 |
+| LightGBM reweighing 1,5 | 0,7311 | 0,2276 | 0,55 |
+
+| Audit | Baseline | Reweighing 1,5 |
+| --- | ---: | ---: |
+| DI genre / âge | 0,8901 / 0,5996 | 0,9871 / 0,8142 |
+| Écart TPR genre / âge | 0,0722 / 0,1974 | 0,0150 / 0,0921 |
+| Recall défaut | 0,6146 | 0,5214 |
+| Gate | Rejet équité âge | Rejet AUC minimale |
+
+![Performance et équité mesurée des mitigations](docs/assets/performance_fairness.png)
+
+Figure issue des résultats MLflow/DVC de mitigation. Le point bleu respecte les
+règles de l'étude de mitigation ; **il ne passe pas le gate de promotion**.
+La ligne horizontale montre la perte maximale de deux points d'AUC de cette étude,
+pas le minimum 0,74 du gate. La ligne verticale marque l'écart TPR 0,10.
+Les scores de la mixture ExponentiatedGradient ne représentent pas la même
+quantité que le score de risque des arbres. Détails, métriques par groupe,
+proxys et limites : [Model Card](docs/MODEL_CARD.md).
+
+## API, monitoring et démonstration
+
+L'API expose `/predict`, `/explain`, `/model-info`, `/health`, `/live` et un
+rechargement protégé `/model/reload`. Les champs inconnus et les attributs d'audit
+sont rejetés à 422. Les features manquantes sont explicites ; les performances
+offline ne qualifient pas automatiquement ce contrat partiel.
+[Contrat API](docs/api.md).
+
+Les lots 01–03 restent sans alerte ; 04–05 dérivent financièrement, 06 change
+de population, 07 dégrade un groupe et 08 simule une dérive conceptuelle.
+Les labels arrivent après deux lots. Une alerte déclenche le DAG d'entraînement
+et son gate. Le lot 02 garde son avertissement d'AUC brute sous 0,70 ; l'alerte
+utilise par défaut la borne supérieure d'un bootstrap à 95 %.
+[Règles et résultats de monitoring](docs/monitoring.md).
+
+`make demo` crée un modèle `credit-demo-<id>` et une API temporaire : v1 accepté
+(AUC 0,7548), v2 meilleur mais rejeté pour équité (0,9353), v3 repondéré accepté
+(0,9583), aliases `champion=3`, `previous=1`, API rechargée. Le modèle Home Credit
+reste inchangé. [Scénario et limites synthétiques](docs/demo.md).
+
+## Vérification et limites
 
 ```powershell
 .\creditS\Scripts\Activate.ps1
-make up
-make demo
 make test
+make lint
+python -m ruff format --check .
+make down
 ```
 
-Les 95 tests utilisent des fixtures générées. GitHub Actions crée `.ci-venv`,
-installe le `requirements.txt` racine, exécute Ruff et pytest puis construit
-les images Docker sans télécharger Kaggle. Le workflow distant attend la
-configuration d'un remote Git ; les commandes ont été vérifiées localement.
-Scénario et limites : [docs/demo.md](docs/demo.md).
-Preuves : [docs/phase11-validation.md](docs/phase11-validation.md).
+La CI GitHub Actions crée `.ci-venv`, installe `requirements.txt`, exécute Ruff
+et pytest avec fixtures générées, puis construit API et Airflow sans Kaggle.
+Aucun remote Git n'est configuré ici : la CI distante reste à exécuter.
+`make down` conserve les volumes et les bases.
+
+Ce dépôt ne fournit pas de PD calibrées, de validation temporelle indépendante,
+de qualification bancaire ni de certification réglementaire. Les proxys persistent
+malgré l'exclusion des attributs sensibles ; les petits groupes et la sélection
+sur validation limitent l'interprétation. Le réentraînement Home Credit repart
+du snapshot de données configuré ; l'intégration automatique de nouveaux labels
+de production dans un dataset d'entraînement n'est pas implémentée.
+
+[Architecture](docs/architecture.md), [Docker](docs/docker.md),
+[Airflow](docs/airflow.md), [Model Card](docs/MODEL_CARD.md).
+Les preuves historiques sont dans `docs/phase*-validation.md` ;
+[phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
+décrivent les dernières validations.

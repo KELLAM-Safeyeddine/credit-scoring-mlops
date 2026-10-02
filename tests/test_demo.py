@@ -10,6 +10,25 @@ from src.models.fairness import audit_fairness, intersection_groups, reweighing_
 from src.monitoring.demo_data import cohort, training_cohort
 
 
+def test_fresh_registry_demo_preserves_absent_home_credit(tmp_path):
+    from mlflow import MlflowClient
+    from mlflow.exceptions import MlflowException
+
+    from scripts.demo import home_credit_aliases
+
+    client = MlflowClient(tracking_uri=f"sqlite:///{tmp_path / 'tracking.db'}")
+    assert home_credit_aliases(client) is None
+    client.create_registered_model("credit-scoring")
+    assert home_credit_aliases(client) == {}
+
+    class Unavailable:
+        def get_registered_model(self, name):
+            raise MlflowException("Registry unavailable", error_code="INTERNAL_ERROR")
+
+    with pytest.raises(MlflowException, match="unavailable"):
+        home_credit_aliases(Unavailable())
+
+
 def test_demo_cohorts_are_disjoint_and_group_inputs_excluded():
     train, _, _ = training_cohort(1)
     val, y, sensitive = cohort(123)

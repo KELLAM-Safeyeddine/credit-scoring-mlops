@@ -88,8 +88,8 @@ La promotion et le rechargement sont deux opérations distinctes. Chaque requêt
 conserve un seul snapshot pour sa prédiction, ses explications et son journal.
 Un chargement invalide conserve le modèle précédent, signale l'échec (503) et
 laisse ce dernier servir. Le health indique alors un état de rechargement dégradé.
-Le lancement local reste lié à l'interface loopback ; l'exposition Docker arrive
-en phase 9.
+Le lancement local et les ports publiés de Docker restent liés à l'interface
+loopback. Le déploiement Docker est décrit dans `docs/docker.md`.
 
 Les requêtes réussies produisent un événement JSONL dans le chemin configurable
 `api.log_path` (ou `API_LOG_PATH`) avec timestamp UTC, UUID, pseudonyme HMAC-SHA256,
@@ -99,7 +99,9 @@ client original n'est ni retourné ni journalisé. Une erreur d'écriture empêc
 une réponse de scoring réussie. Un seul worker doit écrire ce journal local.
 
 La pseudonymisation n'est pas une anonymisation ; les features restent sensibles
-au sens de confidentialité. Le monitoring pourra lire ces événements en phase 10.
+au sens de confidentialité. L'adaptateur `src.monitoring.api_logs` convertit ces
+événements en rapports Evidently de données et de scores ; le DAG actuel consomme
+les lots simulés. L'ingestion d'événements avec valeurs manquantes est testée.
 Les attributs d'audit doivent être joints via une source autorisée séparée :
 ils ne figurent pas dans les requêtes ou features du service. La rotation de clé
 change les pseudonymes ; la conservation et les contrôles d'accès restent à définir

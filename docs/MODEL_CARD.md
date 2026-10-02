@@ -1,98 +1,254 @@
-# Model Card — état après la phase 6
+# Model Card — Home Credit et état de qualification
 
-Projet pédagogique Home Credit Default Risk, sample_frac=0.1. Aucun modèle
-n'est promu ni destiné à prendre des décisions de crédit réelles à ce stade.
-Le dataset Kaggle et les seuils choisis ne démontrent pas une représentativité
-pour une population réelle. La carte sera complétée pendant la phase 12.
+Date de revue : **2 octobre 2026**. Usage prévu : apprentissage MLOps, analyse
+offline du risque, explicabilité et audit d'équité. Responsable opérationnel,
+population bancaire cible et procédure de recours ne sont pas définis : ce dépôt
+n'est pas autorisé à prendre des décisions réelles d'octroi ou de refus de crédit.
 
-## Données et modèle
+**Statut : aucun champion Home Credit accepté.** Le Registry local contient
+les versions 1–2 rejetées ; le Registry Docker contient les versions 1–5 rejetées.
+Les modèles `credit-demo-*` acceptés appartiennent exclusivement à la démonstration
+synthétique. Le biais est mesuré et contrôlé selon les métriques décrites sur les
+échantillons évalués ; aucune garantie générale d'absence de discrimination n'est donnée.
 
-Train 14 760, validation 4 920, test réservé 4 920, production isolée 6 151.
-Version brute DVC : `6d6f2659068bf71e19aece18bd8736eb.dir`.
-261 features ; encodage, imputation et statistiques ajustés sur le train.
-CODE_GENDER, DAYS_BIRTH, AGE_YEARS, AGE_GROUP et EMPLOYED_AGE_RATIO ne sont pas
-des features. Les tables sensibles servent à l'audit et à l'étude des mitigations.
-La repondération estime ses poids uniquement sur les intersections genre/âge
-du train et utilise un seuil global à l'inférence, sans attribut sensible.
+## Données, version et préparation
 
-## Résultats provisoires, validation uniquement
+Source : Home Credit Default Risk, archive Kaggle conservée à la racine,
+extraite de manière idempotente. Tables : application_train, application_test,
+bureau, bureau_balance, previous_application, POS_CASH_balance, credit_card_balance,
+installments_payments, HomeCredit_columns_description. Les agrégations du modèle
+utilisent bureau, previous_application et installments_payments ; toutes les
+sources extraites ne sont donc pas actuellement exploitées comme features.
 
-| Métrique | LightGBM baseline | Repondération, puissance 1.5 |
-|---|---:|---:|
-| ROC-AUC | 0.7487 | 0.7311 |
-| Seuil global de refus | 0.49 | 0.55 |
-| Recall du défaut | 0.6146 | 0.5214 |
-| Disparate impact acceptation, genre | 0.8901 | 0.9871 |
-| Disparate impact acceptation, âge | 0.5996 | 0.8142 |
-| Écart de TPR défaut, genre | 0.0722 | 0.0150 |
-| Écart de TPR défaut, âge | 0.1974 | 0.0921 |
+Version brute DVC : **`6d6f2659068bf71e19aece18bd8736eb.dir`** ; descriptor
+`data/raw.dvc`. Remote local résolu : dossier frère `../dvc-storage`.
+Les paramètres, hashes des inputs et snapshot du lock avant entraînement sont
+archivés dans MLflow. Le hash du lock est celui d'un snapshot, pas une promesse
+que le lock n'a jamais changé après le run. Les bases MLflow ne sont pas des
+artefacts restaurés par DVC.
 
-Positif = défaut prédit = refus. Taux de sélection = acceptation = 1 - prédiction.
-Disparate impact = minimum/maximum du taux d'acceptation des groupes comparables.
-Equal opportunity difference = maximum-minimum du TPR de refus parmi les défauts
-réels. Equalized odds difference = maximum de l'écart TPR et de l'écart FPR.
-Les métriques et effectifs détaillés par groupe sont dans
-`reports/fairness/fairness_report.json`, conservé par DVC et MLflow.
+`TARGET=1` signifie défaut. `application_test.csv` n'a pas de TARGET et ne sert
+ni au train ni à la validation ni au test supervisé. Le développement utilise
+`sample_frac=0.1`, seed 42 : 30 751 dossiers, puis réserve de production isolée
+6 151 et split stratifié 60/20/20 du reste. Train 14 760, validation 4 920,
+test réservé 4 920 ; prévalence validation 397/4 920, soit 8,07 %.
+Les expériences publiées ne portent pas sur un entraînement final à 100 %.
 
-Le candidat respecte DI >= 0.8 et écart TPR <= 0.10 sur genre et âge, avec une
-perte d'AUC de 0.0175, inférieure à 0.02. Il ne respecte pas le minimum AUC
-0.74 du futur quality gate. Cette étude de mitigation n'est pas une promotion.
-Le biais est mesuré et contrôlé selon ces métriques sur cette validation ;
-aucune absence générale de biais n'est affirmée.
+Les encodeurs, imputations, standardisations et poids de reweighing sont ajustés
+sur le train. Les agrégations historiques respectent un cutoff au jour de demande.
+`DAYS_EMPLOYED=365243` devient NaN avec indicateur `EMPLOYED_ANOMALY`.
+Les ratios de crédit, revenu, annuité, durée et scores externes, ainsi que
+14 agrégats historiques, donnent 261 colonnes ordonnées.
 
-Comparaisons limitées aux groupes ayant au moins 100 observations et 20 exemples
-de chaque classe. F/M et les quatre tranches d'âge sont requis. XNA est affiché,
-mais n'a qu'un client en validation et aucun défaut : son TPR est non estimable,
-son équité n'est pas certifiée. La couverture genre des comparaisons est 4919/4920.
-Les faibles effectifs de défauts, particulièrement chez les 60+, rendent les
-écarts incertains ; les seuils franchis de peu ne garantissent pas leur stabilité.
-Les paramètres, méthodes et seuils sont sélectionnés sur cette même validation :
-une évaluation indépendante sur le test reste nécessaire.
+Les identifiants ne sont pas des entrées du modèle. `CODE_GENDER`, `DAYS_BIRTH`,
+`AGE_YEARS`, `AGE_GROUP` et `EMPLOYED_AGE_RATIO` sont exclus. Âge calculé par
+`-DAYS_BIRTH/365.25`, groupes `<30`, `[30,45)`, `[45,60)`, `60+`.
+Le ratio emploi/âge est calculé et conservé pour l'audit uniquement, conformément
+au choix utilisateur. Les attributs sensibles servent à mesurer l'équité et à
+l'étude des mitigations, pas à l'inférence du candidat retenu.
+
+## Modèle, décision et performance globale
+
+Le meilleur modèle de ranking est LightGBM 4.6.0 : 150 arbres, learning rate 0,05,
+15 feuilles, minimum 100 observations par feuille, L2=5 et class_weight=balanced.
+Le candidat mitigé réutilise cette famille avec des poids de reweighing puissance
+1,5 estimés sur les intersections genre/âge et label du train.
+La sélection des modèles, hyperparamètres, seuils et mitigations utilise la
+validation ; ses métriques peuvent donc être optimistes. Le test indépendant
+reste réservé et aucune performance finale de test n'est revendiquée.
+
+Les scores sont des sorties de ranking **non calibrées**, particulièrement avec
+pondération des classes ; le champ API `default_score` ne constitue pas une PD
+bancaire. Une prédiction de défaut vaut 1 et signifie refus dans cette convention.
+L'acceptation vaut `1 − prédiction`. Les seuils globaux sont 0,49 pour la baseline
+et 0,55 pour le candidat repondéré. Le coût de sélection est configurable :
+faux négatif (défaut manqué) 10, faux positif (refus à tort) 1.
+
+| Métrique de validation | Baseline | Reweighing 1,5 |
+| --- | ---: | ---: |
+| ROC-AUC | 0,7487 | 0,7311 |
+| PR-AUC | 0,2427 | 0,2276 |
+| KS | 0,3770 | 0,3602 |
+| Gini | 0,4973 | 0,4623 |
+| Recall défaut / TPR | 0,6146 | 0,5214 |
+| Précision des refus | 0,1795 | 0,2027 |
+| Taux d'acceptation | 0,7238 | 0,7925 |
+| Coût sur 4 920 observations | 2 645 | 2 714 |
+| Faux négatifs / faux positifs | 153 / 1 115 | 190 / 814 |
+
+La mitigation perd 0,0175 d'AUC, sous la limite de deux points de l'étude ;
+les faux négatifs augmentent. Elle ne passe pas le minimum AUC 0,74 du gate.
+Le coût choisi et les métriques ne définissent pas à eux seuls un bénéfice
+économique ou un niveau de risque acceptable pour une banque.
+
+## Performance et décisions par groupe
+
+Validation seulement. Chaque cellule `baseline / mitigation` utilise les mêmes
+observations ; les TPR/FPR portent sur le refus. Les effectifs rendent visible
+l'incertitude, en particulier les 26 défauts chez les 60+.
+
+| Groupe | Dossiers | Défauts | AUC baseline / mitigation | Acceptation baseline / mitigation |
+| --- | ---: | ---: | ---: | ---: |
+| F | 3 244 | 231 | 0,7462 / 0,7242 | 0,7518 / 0,7959 |
+| M | 1 675 | 166 | 0,7466 / 0,7410 | 0,6693 / 0,7857 |
+| XNA | 1 | 0 | Non estimable | 1,0000 / 1,0000 |
+| <30 | 715 | 76 | 0,6936 / 0,6952 | 0,5119 / 0,6755 |
+| 30–45 | 2 019 | 200 | 0,7507 / 0,7391 | 0,7023 / 0,8029 |
+| 45–60 | 1 646 | 95 | 0,7489 / 0,7335 | 0,7995 / 0,8183 |
+| 60+ | 540 | 26 | 0,7160 / 0,7151 | 0,8537 / 0,8296 |
+
+| Groupe | TPR baseline / mitigation | FPR baseline / mitigation |
+| --- | ---: | ---: |
+| F | 0,5844 / 0,5152 | 0,2224 / 0,1802 |
+| M | 0,6566 / 0,5301 | 0,2949 / 0,1796 |
+| XNA | Non estimable | 0,0000 / 0,0000 ; un seul dossier |
+| <30 | 0,6974 / 0,5921 | 0,4632 / 0,2926 |
+| 30–45 | 0,6250 / 0,5000 | 0,2617 / 0,1638 |
+| 45–60 | 0,5579 / 0,5158 | 0,1786 / 0,1612 |
+| 60+ | 0,5000 / 0,5000 | 0,1284 / 0,1537 |
+
+## Équité, support et promotion
+
+Fairlearn 0.13.0 `MetricFrame` mesure les taux par groupe. DI = taux minimum
+sur taux maximum d'acceptation. Demographic parity difference = écart maximal
+d'acceptation. Equal opportunity difference = écart maximal du TPR de refus
+parmi les défauts réels. Equalized odds difference = maximum des écarts TPR/FPR.
+Ces notions mesurent des propriétés distinctes ; l'EO de refus n'est pas définie
+ici sur l'acceptation de personnes qui ne font pas défaut.
+
+| Mesure | Baseline genre / âge | Mitigation genre / âge |
+| --- | ---: | ---: |
+| Disparate impact acceptation | 0,8901 / 0,5996 | 0,9871 / 0,8142 |
+| Demographic parity difference | 0,0826 / 0,3418 | 0,0103 / 0,1541 |
+| Equal opportunity difference | 0,0722 / 0,1974 | 0,0150 / 0,0921 |
+| Equalized odds difference | 0,0725 / 0,3348 | 0,0150 / 0,1389 |
+
+Le gate contrôle DI ≥ 0,8 et EO ≤ 0,10 pour F/M et les quatre groupes d'âge,
+avec au moins 100 dossiers et 20 exemples de chaque classe par groupe.
+Il ne contraint pas directement demographic parity difference ni equalized odds
+par un seuil supplémentaire ; les deux restent rapportées. XNA est affiché mais
+exclu de la comparaison faute de support : aucune certification de son équité.
+Couverture de la comparaison genre : 4 919/4 920.
+
+Le gate exige aussi AUC ≥ 0,74, baisse d'AUC ≤ 0,005 face au champion sur les
+mêmes hashes de validation, recall ≥ 0,50, acceptation entre 0,10 et 0,95,
+preuves SHAP et inférence déterministe sans attribut sensible. La baseline
+échoue aux deux règles d'équité âge ; la mitigation échoue à l'AUC minimale.
+Les versions rejetées restent inspectables avec leurs règles échouées.
+Les franchissements proches des limites ne démontrent pas une stabilité hors
+échantillon, temporelle, intersectionnelle ou sur d'autres attributs protégés.
+
+![Compromis performance et équité mesurée](assets/performance_fairness.png)
+
+Le bleu représente le succès de l'étude de mitigation, pas du gate global.
+La ligne horizontale est la limite de perte d'AUC de l'étude (baseline − 0,02).
+Le minimum de promotion 0,74 est distinct. Source : comparaisons DVC/MLflow
+`reports/fairness/mitigation_comparison.csv` ; aucune mesure n'est fabriquée.
 
 ## Explicabilité et proxys
 
-SHAP TreeExplainer 0.49.1 explique le score brut du LightGBM, en log-odds du
-défaut. Une contribution positive augmente le score de défaut. Les explications
-reconstruisent la sortie du modèle à une erreur inférieure à 1e-6 ; il s'agit
-d'associations du modèle, pas de causes ni d'une preuve d'équité. Les valeurs
-imputées sont expliquées, et ne doivent pas être présentées comme des valeurs
-déclarées par le client. Summary, bar et trois waterfalls sont archivés par run.
-Les scores, notamment avec class_weight=balanced, ne sont pas des PD calibrées.
+SHAP 0.49.1 TreeExplainer explique la sortie brute LightGBM en log-odds du défaut.
+Une contribution positive augmente le score de défaut. Summary, bar et trois
+waterfalls (accepté, refusé, limite) sont archivés par run. Le candidat présente
+une erreur maximale de reconstruction de probabilité de 4,44e-16, sous 1e-6.
+Les trois raisons API utilisent un dictionnaire de libellés français.
 
-Un classifieur auxiliaire prédit le genre connu à partir des features autorisées
-avec AUC validation 0.8734. Les coefficients standardisés et corrélations du
-train sont dans `reports/fairness/proxy_report.json`. Ils signalent des proxys
-potentiels, sans démontrer qu'une variable particulière cause une discrimination.
+Les explications décrivent des associations du modèle, pas des causes ni une
+preuve d'équité. Elles portent sur les features transformées et imputées :
+une valeur manquante imputée ne doit pas être présentée comme déclarée par le client.
+Les proxys peuvent persister malgré l'exclusion des attributs sensibles : un
+classifieur auxiliaire prédit le genre connu avec AUC validation 0,8734.
+Coefficients et corrélations de l'analyse train sont dans `proxy_report.json`.
+Cette analyse ne démontre pas qu'une feature particulière cause une discrimination.
 
-## Limites des comparateurs Fairlearn
+## Limites des comparateurs de mitigation
 
-ThresholdOptimizer est ajusté sur une réserve de calibration dans le train,
-séparée des observations utilisées pour son estimateur. Ses seuils utilisent
-les intersections genre/âge à l'inférence et ses décisions sont randomisées,
-comme décrit par la [documentation Fairlearn 0.13](https://fairlearn.org/v0.13/user_guide/mitigation/postprocessing.html).
-L'emploi du genre et de l'âge dans une décision réelle soulève une limite
-juridique potentielle : l'admissibilité de ces seuils doit être étudiée pour
-la juridiction et le contexte d'usage. Ce comparateur reste réservé à l'étude,
-et ne satisfait pas la règle de production sans attribut sensible.
-Les groupes absents ou insuffisamment représentés en calibration utilisent le
-seuil global de secours, avec cette limite conservée dans la politique.
+ThresholdOptimizer est calibré sur une réserve du train, séparée du fit de
+l'estimateur. Ses seuils dépendent des intersections genre/âge à l'inférence et
+ses décisions sont randomisées ; les groupes insuffisants utilisent un secours
+au seuil global. Le comparateur mesuré présente EO âge 0,1166, au-dessus de 0,10.
+Il n'est pas retenu et échoue à la règle d'inférence sans attribut sensible.
+L'emploi de seuils par groupe dans une décision de crédit soulève une **limite
+juridique potentielle**, à examiner selon le contexte et la juridiction ; un
+meilleur indicateur d'équité ne rend pas cette pratique automatiquement admissible.
+Voir la [documentation Fairlearn 0.13](https://fairlearn.org/v0.13/user_guide/mitigation/postprocessing.html).
 
-ExponentiatedGradient utilise une mixture randomisée de classifieurs entraînés
-sous contrainte EqualizedOdds. Son score est une probabilité de refus de la
-mixture, pas une probabilité calibrée de défaut. Son AUC ne doit donc pas être
-interprétée comme exactement la même quantité que le score du modèle de base.
-Les deux comparateurs sont évalués sur leurs décisions effectivement tirées,
-avec seed=42 ; la randomisation introduit une variabilité supplémentaire.
-Ils ne sont pas retenus dans cette exécution. En particulier, une solution
-qui accepte presque tout échoue aux règles d'utilité : recall >= 0.50 et taux
-d'acceptation compris entre 0.10 et 0.95.
+ExponentiatedGradient apprend une mixture sous contrainte EqualizedOdds. Son
+score est une probabilité de refus de la mixture, pas une PD calibrée ; son AUC
+ne décrit pas exactement la même quantité que celle du score de base. Les
+comparateurs sont évalués sur leurs décisions tirées avec seed 42. Dans cette
+exécution, la mixture accepte 98,35 % et ne rappelle que 7,56 % des défauts :
+elle échoue aux règles d'utilité et n'est pas retenue.
 
-## Travail restant
+## API, monitoring et réentraînement
 
-Quality gate et Registry sont opérationnels : les versions réelles 1 (baseline)
-et 2 (mitigation) sont rejetées respectivement pour équité âge et AUC minimale.
-Aucun champion n'est déployable actuellement. Les tests d'alias acceptés restent
-isolés du Registry du projet. Orchestration, audit indépendant du test, API et
-supervision sont les prochaines phases. Le cadre réglementaire détaillé, les mesures de contrôle
-humain, la protection des données et la surveillance seront documentés avant
-toute prétention d'utilisation réelle. Aucun déploiement réel n'est validé ici.
+L'API charge uniquement un champion accepté et vérifie les preuves Registry,
+le seuil et les colonnes. Son contrat accepte un sous-ensemble raisonnable des
+variables et des agrégats déjà calculés en amont. Les champs sensibles sont
+rejetés. L'inférence expose les inputs manquants et conserve le schéma complet,
+mais les métriques offline ne qualifient pas ce mode d'entrée partielle.
+Sans champion Home Credit, les routes de scoring et `/health` répondent 503.
+
+Evidently 0.7.20 mesure PSI de données et scores, population et performance après
+labels ; Fairlearn mesure DI et écarts par groupe. Les labels simulés sont
+retardés de deux lots. Règles : part de features en drift > 30 %, PSI score > 0,20,
+PSI de features critiques > 0,10, DI < 0,8, borne supérieure bootstrap AUC à 95 %
+< 0,70. Les changements de valeurs manquantes et constantes émergentes sont
+contrôlés. Le monitoring réduit les supports à 20 dossiers et 5 par classe,
+sans modifier les supports du gate. Les métriques sans support restent non évaluables.
+
+Le lot 02 conserve un avertissement pour son AUC brute 0,6622 sans alerte par la
+règle d'incertitude ; cette règle peut retarder une détection réelle. Les lots
+04–08 déclenchent les alertes attendues ; une dérive conceptuelle du lot 08 n'est
+visible qu'à réception des labels. Les scénarios sont des perturbations
+contrôlées, pas une étude prospective de drift de marché.
+
+Airflow déclenche le réentraînement et repasse le gate. Le pipeline Home Credit
+repart du snapshot configuré ; l'incorporation automatique de nouveaux labels
+réels dans un nouveau snapshot n'est pas implémentée. Le scénario synthétique
+v1/v2/v3 prouve les transitions sur des cohortes appariées de prévalence 50 %,
+sans qualifier les ~8 % de défauts Home Credit.
+
+Les journaux API contiennent timestamp, features avant imputation, score,
+décision, version/run, UUID et pseudonyme HMAC. La pseudonymisation n'est pas une
+anonymisation ; les features restent confidentielles. Rotation, durée de
+conservation, chiffrement, accès et suppression doivent être définis avant usage
+réel. Les groupes et labels du monitoring des logs exigent une jointure autorisée
+séparée ; ils ne sont pas inférés depuis les features.
+
+## Cadre réglementaire européen — sources vérifiées le 2 octobre 2026
+
+**RGPD, article 22.** Le principe encadre les décisions exclusivement automatisées
+ayant des effets juridiques ou significatifs. Les exceptions concernent nécessité
+contractuelle, autorisation légale ou consentement explicite ; des garanties
+restent requises, avec intervention humaine, expression du point de vue et
+contestation dans les cas prévus. Un score SHAP n'implémente pas ces droits.
+[Texte de l'article 22 publié par la CNIL](https://www.cnil.fr/fr/reglement-europeen-protection-donnees/chapitre3).
+
+**AI Act.** Le scoring de personnes physiques relève de l'annexe III, 5(b), hors
+exception de détection de fraude financière. Le cadre haut risque prévoit gestion
+des risques, gouvernance des données, documentation, logs, supervision humaine,
+robustesse et obligations de conformité ; l'article 27 vise l'évaluation d'impact
+sur les droits fondamentaux pour les déployeurs de ces systèmes. Le texte consolidé
+au 27 juillet 2026 fixe au **2 décembre 2027** l'application du chapitre III,
+sections 1–3, pour l'annexe III, avec l'exception indiquée pour l'article 6(5).
+[AI Act consolidé, annexe III et articles 27/113](https://eur-lex.europa.eu/eli/reg/2024/1689/2026-07-27/eng).
+
+Ces repères européens ne déterminent pas automatiquement le régime applicable
+à un déploiement au Maroc ou dans une autre juridiction. Le contexte, les rôles
+fournisseur/déployeur et les bases juridiques doivent être établis. Ce dépôt ne
+constitue ni une certification réglementaire ni une procédure de recours.
+
+## Conditions préalables à un usage réel
+
+Définir la population cible, le responsable, une revue humaine effective et un
+recours compréhensible ; valider les droits d'usage et la minimisation des données.
+Obtenir un modèle passant le gate sans l'assouplir ; évaluer sur un test intact
+et des périodes nouvelles, calibrer les scores et qualifier le contrat API réel.
+Étendre l'audit aux intersections et attributs pertinents, quantifier l'incertitude
+et surveiller les groupes insuffisants. Prévoir sécurisation des services et logs,
+sauvegardes, incidents, retour au champion précédent et validation réglementaire.
+
+Preuves et fonctionnement : [architecture](architecture.md), [monitoring](monitoring.md),
+[démonstration](demo.md), [validation phase 11](phase11-validation.md) et
+[validation phase 12](phase12-validation.md).
