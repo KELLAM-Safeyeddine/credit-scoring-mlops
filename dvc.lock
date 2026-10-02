@@ -10,8 +10,8 @@ stages:
       nfiles: 11
     - path: src/config.py
       hash: md5
-      md5: 38c207edaca1b202d347dcab1c02d2ac
-      size: 2917
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
     - path: src/data/make_dataset.py
       hash: md5
       md5: 752ad17e13aa106cb991bfcc3108e297
@@ -68,8 +68,8 @@ stages:
       size: 404973293
     - path: src/config.py
       hash: md5
-      md5: 38c207edaca1b202d347dcab1c02d2ac
-      size: 2917
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
     - path: src/features/aggregations.py
       hash: md5
       md5: 98609fbb2f4ede9f15665b9f80d70063
@@ -126,8 +126,8 @@ stages:
       nfiles: 11
     - path: src/config.py
       hash: md5
-      md5: 38c207edaca1b202d347dcab1c02d2ac
-      size: 2917
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
     - path: src/features/aggregations.py
       hash: md5
       md5: 98609fbb2f4ede9f15665b9f80d70063
@@ -144,19 +144,30 @@ stages:
       hash: md5
       md5: 67fc78395d04ac4a569a7a1dc576ad07
       size: 2413
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: 02b8c771a3005730adb6fda4a74f0383
+      size: 1912
+    - path: src/models/experiments.py
+      hash: md5
+      md5: bb41d6caad29cafb1f6bf10a62717050
+      size: 9573
     - path: src/models/train.py
       hash: md5
-      md5: c52b0020ea6a04ef2a6b92960ed73924
-      size: 4191
+      md5: 937ab8339a8602798ecaafaa3c6d78fd
+      size: 3656
     params:
       params.yaml:
         data.random_state: 42
+        mlflow:
+          experiment_name: credit-scoring
+          registered_model_name: credit-scoring
+          tracking_uri: http://localhost:5000
         paths.models: models
         paths.processed: data/processed
         paths.reports: reports
         runtime.python: creditS/Scripts/python.exe
         train:
-          model: logistic_regression
           candidate_models:
           - logistic_regression
           - random_forest
@@ -173,11 +184,13 @@ stages:
             max: 0.99
             steps: 99
           lightgbm:
-            n_estimators: 500
+            n_estimators: 150
             learning_rate: 0.05
-            num_leaves: 31
+            num_leaves: 15
             class_weight: balanced
             n_jobs: 4
+            min_child_samples: 100
+            reg_lambda: 5.0
           random_forest:
             n_estimators: 200
             max_depth: 12
@@ -188,14 +201,23 @@ stages:
             learning_rate: 0.05
             n_jobs: 4
     outs:
-    - path: models/baseline.pkl
+    - path: models
       hash: md5
-      md5: 2b39d111951e0f96945323d7d80f97a0
-      size: 20187
+      md5: 14968d2f03d26e4eacf9945cb1e4fefb.dir
+      size: 11320570
+      nfiles: 5
     - path: reports/baseline_metrics.json
       hash: md5
-      md5: 488ae627420a63ed9916b1f60b6c86c8
-      size: 595
+      md5: 20f6985643e87fd65966364212c192b8
+      size: 1446
+    - path: reports/model_comparison.csv
+      hash: md5
+      md5: fc9ce225c8ff99d9647dca88b8a70666
+      size: 1397
+    - path: reports/model_comparison.json
+      hash: md5
+      md5: d87253d163859486c8279d0d1972f0d0
+      size: 4072
   simulate_production:
     cmd: '"creditS/Scripts/python.exe" -m src.data.simulate_production'
     deps:
@@ -206,12 +228,12 @@ stages:
       nfiles: 16
     - path: models/baseline.pkl
       hash: md5
-      md5: 2b39d111951e0f96945323d7d80f97a0
-      size: 20187
+      md5: 35d6a29fd6801964500c439733b30ccc
+      size: 288964
     - path: src/config.py
       hash: md5
-      md5: 38c207edaca1b202d347dcab1c02d2ac
-      size: 2917
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
     - path: src/data/simulate_production.py
       hash: md5
       md5: 225a01b6063ad021e0a731befd2e4022
@@ -235,6 +257,6 @@ stages:
     outs:
     - path: data/production
       hash: md5
-      md5: e618a10d57c3191e539d90c968a231bb.dir
-      size: 7467260
+      md5: 89359577011a69783bdee3985ede7471.dir
+      size: 7462221
       nfiles: 33

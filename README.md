@@ -113,3 +113,28 @@ la comparaison des familles de modèles arrivera en phase 4. Aucun modèle n'est
 
 Détails et preuves : [docs/phase3-validation.md](docs/phase3-validation.md).
 L'EDA du train, exécutée, est dans [notebooks/01_eda.ipynb](notebooks/01_eda.ipynb).
+
+## Expérimentation MLflow (phase 4)
+
+MLflow 3.10.1 utilise SQLite et un dossier d'artefacts local. Les quatre familles
+utilisent les mêmes splits et features ; le test est réservé. AUC validation :
+logistique 0,7210 ; Random Forest 0,7240 ; XGBoost 0,7372 ; LightGBM 0,7487.
+Le candidat LightGBM utilise un seuil métier de 0,49 après une recherche limitée
+à six configurations sur validation. Il attend les contrôles d'équité et SHAP,
+puis le quality gate : aucun modèle n'est encore promu.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make mlflow
+make train
+make test
+python -m scripts.verify_experiments
+```
+
+UI : [MLflow](http://localhost:5000/#/experiments/1).
+Les métriques, paramètres, modèles, encodeurs et hashes des données sont loggés.
+Le tag du lock identifie le snapshot avant entraînement, archivé sans modification.
+Les scores ne sont pas des probabilités de défaut calibrées.
+La sélection sur validation peut être optimiste ; le test final reste nécessaire.
+Preuves : [docs/phase4-validation.md](docs/phase4-validation.md).
+Comparaison exécutée : [notebooks/02_baseline.ipynb](notebooks/02_baseline.ipynb).

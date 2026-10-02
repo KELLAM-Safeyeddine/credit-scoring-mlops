@@ -27,14 +27,19 @@ stages:
     deps:
       - src/config.py
       - src/models/train.py
+      - src/models/experiments.py
+      - src/models/evaluate.py
       - src/features/build_features.py
       - src/features/aggregations.py
       - src/features/contracts.py
       - src/features/encoding.py
       - ${paths.raw}
       - ${paths.processed}
-    params: [runtime.python, train, data.random_state, paths.models, paths.reports, paths.processed]
-    outs: ["${paths.models}/baseline.pkl"]
+    params: [runtime.python, train, mlflow, data.random_state, paths.models, paths.reports, paths.processed]
+    outs:
+      - "${paths.models}"
+      - "${paths.reports}/model_comparison.csv"
+      - "${paths.reports}/model_comparison.json"
     metrics:
       - ${paths.reports}/baseline_metrics.json:
           cache: true

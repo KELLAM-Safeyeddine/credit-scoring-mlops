@@ -26,7 +26,6 @@ features:
   # Age-derived employment ratio is computed for audit and excluded from the model.
   sensitive_columns: [CODE_GENDER, DAYS_BIRTH, AGE_YEARS, AGE_GROUP]
 train:
-  model: logistic_regression
   candidate_models: [logistic_regression, random_forest, xgboost, lightgbm]
   baseline:
     C: 1.0
@@ -39,11 +38,13 @@ train:
     max: 0.99
     steps: 99
   lightgbm:
-    n_estimators: 500
+    n_estimators: 150
     learning_rate: 0.05
-    num_leaves: 31
+    num_leaves: 15
     class_weight: balanced
     n_jobs: 4
+    min_child_samples: 100
+    reg_lambda: 5.0
   random_forest:
     n_estimators: 200
     max_depth: 12

@@ -1,19 +1,18 @@
-"""Train a real local DVC baseline without promotion or MLflow tracking yet."""
+"""Threshold selection, compatibility baseline and MLflow experiment entry point."""
 
 import json
-import pickle
+import sys
 from typing import Any
 
 import numpy as np
 import pandas as pd
-import yaml
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, precision_score, recall_score, roc_auc_score
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
-from src.config import ROOT, load_config, parse_params, project_path, write_json
+from src.config import load_config, parse_params
 from src.features.build_features import EXCLUDED
 
 
@@ -80,24 +79,14 @@ def fit_baseline(
 
 
 def main() -> None:
-    """Write a local baseline model and reproducible validation metrics."""
+    """Train and track the configured candidates; leave promotion to the gate."""
+    from src.models.experiments import run_experiments
+
+    # MLflow emits Unicode URLs/emojis; Windows redirected consoles default to cp1252.
+    sys.stdout.reconfigure(encoding="utf-8")
+    sys.stderr.reconfigure(encoding="utf-8")
     cfg = load_config(parse_params())
-    processed = project_path(cfg, "processed")
-
-    def read(name: str) -> pd.DataFrame:
-        return pd.read_csv(processed / f"{name}.csv", index_col="SK_ID_CURR")
-
-    bundle, metrics = fit_baseline(
-        read("X_train"), read("y_train").TARGET, read("X_val"), read("y_val").TARGET, cfg
-    )
-    raw_version = yaml.safe_load((ROOT / "data/raw.dvc").read_text(encoding="utf-8"))
-    metrics["raw_dvc_hash"] = raw_version["outs"][0]["md5"]
-    bundle["metrics"] = metrics
-    model = project_path(cfg, "models") / "baseline.pkl"
-    model.parent.mkdir(parents=True, exist_ok=True)
-    model.write_bytes(pickle.dumps(bundle, protocol=pickle.HIGHEST_PROTOCOL))
-    write_json(project_path(cfg, "reports") / "baseline_metrics.json", metrics)
-    print(json.dumps(metrics, indent=2))
+    print(json.dumps(run_experiments(cfg), indent=2))
 
 
 if __name__ == "__main__":

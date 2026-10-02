@@ -28,8 +28,10 @@ def load_config(path: Path | None = None) -> dict[str, Any]:
         raise ValueError("Chunk size and installment partitions must be positive.")
     if cfg["features"]["history_cutoff_days"] > 0:
         raise ValueError("Historical features cannot use observations after application day zero.")
-    if cfg["train"]["model"] != "logistic_regression":
-        raise ValueError("Multi-model experiments will be implemented in phase 4.")
+    families = {"logistic_regression", "random_forest", "xgboost", "lightgbm"}
+    candidates = cfg["train"]["candidate_models"]
+    if not candidates or len(candidates) != len(set(candidates)) or set(candidates) - families:
+        raise ValueError("Candidate models must be unique supported families.")
     threshold = cfg["train"]["threshold"]
     if threshold["criterion"] != "min_business_cost":
         raise ValueError("Unsupported decision-threshold criterion.")
