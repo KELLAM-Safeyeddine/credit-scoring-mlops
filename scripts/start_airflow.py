@@ -1,4 +1,4 @@
-"""Prepare private Docker state and start the phase-seven services."""
+"""Prepare private Docker state and start the project's Compose services."""
 
 import base64
 import secrets
@@ -37,6 +37,9 @@ def prepare() -> None:
         "AIRFLOW_PORT": "8081",
         "MLFLOW_DOCKER_PORT": "5001",
         "DATA_ARCHIVE": archives[0].name,
+        "API_PORT": "8000",
+        "API_LOG_HMAC_KEY": secrets.token_hex(32),
+        "API_RELOAD_TOKEN": secrets.token_hex(32),
     }
     for key, value in defaults.items():
         if not values.get(key):
@@ -63,12 +66,12 @@ def main() -> None:
     prepare()
     for command in (
         ["docker", "compose", "config", "--quiet"],
-        ["docker", "compose", "build", "airflow-scheduler"],
+        ["docker", "compose", "build", "airflow-scheduler", "api"],
         ["docker", "compose", "up", "-d"],
     ):
         subprocess.run(command, cwd=ROOT, check=True)
     deadline = time.monotonic() + 180
-    expected = {"postgres", "mlflow", "airflow-webserver", "airflow-scheduler"}
+    expected = {"postgres", "mlflow", "airflow-webserver", "airflow-scheduler", "api"}
     while time.monotonic() < deadline:
         output = subprocess.check_output(
             ["docker", "compose", "ps", "--format", "{{.Service}} {{.Health}}"],
@@ -79,7 +82,7 @@ def main() -> None:
             line.split(maxsplit=1) for line in output.splitlines() if len(line.split()) == 2
         )
         if all(health.get(service) == "healthy" for service in expected):
-            print("Airflow, MLflow and PostgreSQL are healthy.")
+            print("Airflow, MLflow, PostgreSQL and API are healthy (API process liveness).")
             return
         time.sleep(2)
     raise TimeoutError("Services did not become healthy within 180 seconds; inspect Compose logs.")

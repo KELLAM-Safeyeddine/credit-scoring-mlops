@@ -13,7 +13,7 @@ def create_service() -> ScoringService:
     return ScoringService(
         RegistryLoader(
             os.getenv("MLFLOW_TRACKING_URI", cfg["mlflow"]["tracking_uri"]),
-            cfg["mlflow"]["registered_model_name"],
+            os.getenv("MLFLOW_MODEL_NAME", cfg["mlflow"]["registered_model_name"]),
         ),
         Path(os.getenv("API_LOG_PATH", str(ROOT / cfg["api"]["log_path"]))),
         os.getenv("API_LOG_HMAC_KEY", ""),

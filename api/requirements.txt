@@ -10,3 +10,4 @@ xgboost-cpu==3.0.5
 shap==0.49.1
 matplotlib==3.10.7
 PyYAML==6.0.3
+scipy==1.15.3

@@ -40,6 +40,29 @@ x-airflow-common: &airflow-common
     mlflow:
       condition: service_healthy
 services:
+  api:
+    image: credit-scoring-api:0.1.0
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    environment:
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      MLFLOW_MODEL_NAME: ${MLFLOW_MODEL_NAME:-credit-scoring}
+      API_LOG_HMAC_KEY: ${API_LOG_HMAC_KEY:?Run scripts/start_airflow.py}
+      API_RELOAD_TOKEN: ${API_RELOAD_TOKEN:?Run scripts/start_airflow.py}
+      API_LOG_PATH: /app/runtime/api/predictions.jsonl
+    ports: ['127.0.0.1:${API_PORT:-8000}:8000']
+    volumes: [api_logs:/app/runtime/api]
+    depends_on:
+      mlflow:
+        condition: service_healthy
+    init: true
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
   postgres:
     image: postgres:14.17
     environment:
@@ -96,5 +119,6 @@ services:
       timeout: 5s
       retries: 20
 volumes:
+  api_logs:
   postgres_data:
   airflow_logs:

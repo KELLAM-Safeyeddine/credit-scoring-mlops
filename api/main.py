@@ -42,6 +42,11 @@ def create_app(service: ScoringService | None = None, reload_token: str | None =
             raise HTTPException(503, "Aucun champion accepté disponible.")
         return snapshot
 
+    @app.get("/live")
+    def live():
+        """Process liveness; readiness remains conditional on an accepted champion."""
+        return {"status": "alive"}
+
     @app.get("/health")
     def health():
         snapshot = current()

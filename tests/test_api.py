@@ -169,6 +169,7 @@ def test_absent_champion_is_unavailable(tmp_path):
     loader.load.side_effect = ValueError("no champion")
     service = ScoringService(loader, tmp_path / "log", "key" * 16)
     with TestClient(create_app(service)) as client:
+        assert client.get("/live").status_code == 200
         assert client.get("/health").status_code == 503
         assert client.get("/model-info").status_code == 503
         assert client.post("/predict", json=PAYLOAD).status_code == 503

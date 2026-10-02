@@ -225,3 +225,26 @@ de ce contrat API. Les réponses réussies et le changement de version sont test
 avec un Registry synthétique isolé.
 Contrat, exemples et limites : [docs/api.md](docs/api.md).
 Preuves : [docs/phase8-validation.md](docs/phase8-validation.md).
+
+## Packaging Docker (phase 9)
+
+La stack démarre PostgreSQL, MLflow, Airflow webserver/scheduler et l'API FastAPI.
+L'image API multi-stage utilise un utilisateur non-root et ses propres
+dépendances épinglées ; le venv local et les secrets sont exclus.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make up
+docker compose ps
+curl.exe -i http://localhost:8000/live
+curl.exe -i http://localhost:8000/health
+python scripts/verify_packaging.py
+```
+
+API : [docs](http://localhost:8000/docs), MLflow : [UI](http://localhost:5001),
+Airflow : [UI](http://localhost:8081). Les cinq services sont sains ; le scoring
+principal reste indisponible (503) tant qu'un champion n'est pas accepté.
+Le test Docker isolé valide un scoring à 200 avec un Registry MLflow HTTP
+synthétique séparé, sans modifier le Registry Home Credit.
+Configuration et persistance : [docs/docker.md](docs/docker.md).
+Preuves : [docs/phase9-validation.md](docs/phase9-validation.md).

@@ -17,6 +17,10 @@ puis démarre Uvicorn sur `127.0.0.1:8000`, avec un seul worker. Les secrets ne 
 jamais affichés ni versionnés. Le Registry est celui de `MLFLOW_TRACKING_URI`,
 ou celui de `params.yaml` (localhost:5000). Le Registry Docker sur 5001 est
 indépendant : sélectionner explicitement cette URI pour l'utiliser.
+Depuis la phase 9, `make up` sert déjà l'API Docker sur 8000. Arrêter ce service
+avec `docker compose stop api` avant de lancer le serveur local sur le même port.
+Docker utilise `http://mlflow:5000` et peut sélectionner le nom du modèle avec
+`MLFLOW_MODEL_NAME` ; par défaut, il s'agit de `credit-scoring`.
 
 ```powershell
 .\creditS\Scripts\Activate.ps1
@@ -74,6 +78,8 @@ associations du modèle, exprimées dans les unités brutes du modèle, pas des 
 `GET /model-info` expose version, date, run, seuil, métriques, hash du train,
 hash d'évaluation, hash DVC brut et hash du snapshot `dvc.lock` s'il est disponible.
 `GET /health` renvoie 200 avec un modèle vérifié et 503 en son absence.
+`GET /live` vérifie uniquement que le processus répond. Le healthcheck Docker
+utilise cette route pour permettre un rechargement même sans champion initial.
 
 ## Rechargement et surveillance
 
