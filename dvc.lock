@@ -260,3 +260,191 @@ stages:
       md5: 89359577011a69783bdee3985ede7471.dir
       size: 7462221
       nfiles: 33
+  fairness:
+    cmd: '"creditS/Scripts/python.exe" -m src.models.mitigate'
+    deps:
+    - path: data/processed
+      hash: md5
+      md5: 43e9932ad95785755dcbe2fa253f4f3c.dir
+      size: 36125438
+      nfiles: 16
+    - path: models/baseline.pkl
+      hash: md5
+      md5: 35d6a29fd6801964500c439733b30ccc
+      size: 288964
+    - path: src/config.py
+      hash: md5
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
+    - path: src/models/evaluate.py
+      hash: md5
+      md5: 02b8c771a3005730adb6fda4a74f0383
+      size: 1912
+    - path: src/models/experiments.py
+      hash: md5
+      md5: bb41d6caad29cafb1f6bf10a62717050
+      size: 9573
+    - path: src/models/fairness.py
+      hash: md5
+      md5: 5475eb9a4a64e4995095b4288009a194
+      size: 6917
+    - path: src/models/mitigate.py
+      hash: md5
+      md5: 6bf0bb927cc31e84a31c7f3b4f69b70f
+      size: 18724
+    - path: src/models/policies.py
+      hash: md5
+      md5: 1a16db04176943bf8846ea7954004d0d
+      size: 2416
+    - path: src/models/train.py
+      hash: md5
+      md5: 937ab8339a8602798ecaafaa3c6d78fd
+      size: 3656
+    params:
+      params.yaml:
+        data.random_state: 42
+        fairness:
+          sensitive_features:
+          - CODE_GENDER
+          - AGE_GROUP
+          age_bins:
+          - 30
+          - 45
+          - 60
+          age_labels:
+          - <30
+          - 30-45
+          - 45-60
+          - 60+
+          min_disparate_impact: 0.8
+          max_equal_opp_diff: 0.1
+          max_auc_loss_mitigation: 0.02
+          positive_label: 1
+          selection_definition: acceptance
+          min_group_size: 100
+          min_class_count: 20
+          required_groups:
+            CODE_GENDER:
+            - F
+            - M
+            AGE_GROUP:
+            - <30
+            - 30-45
+            - 45-60
+            - 60+
+          mitigation:
+            reweighing_powers:
+            - 0.5
+            - 1.0
+            - 1.5
+            - 1.75
+            - 2.0
+            min_recall: 0.5
+            min_acceptance_rate: 0.1
+            max_acceptance_rate: 0.95
+            calibration_size: 0.2
+            reduction_eps: 0.01
+            reduction_difference_bound: 0.02
+            reduction_max_iter: 12
+          shap_sample_size: 400
+          proxy_max_features: 20
+        mlflow:
+          experiment_name: credit-scoring
+          registered_model_name: credit-scoring
+          tracking_uri: http://localhost:5000
+        paths.audit_models: artifacts/fairness_models
+        paths.audit_reports: reports/fairness
+        paths.models: models
+        paths.processed: data/processed
+        runtime.python: creditS/Scripts/python.exe
+        train:
+          candidate_models:
+          - logistic_regression
+          - random_forest
+          - xgboost
+          - lightgbm
+          baseline:
+            C: 1.0
+            max_iter: 500
+          threshold:
+            criterion: min_business_cost
+            false_negative_cost: 10.0
+            false_positive_cost: 1.0
+            min: 0.01
+            max: 0.99
+            steps: 99
+          lightgbm:
+            n_estimators: 150
+            learning_rate: 0.05
+            num_leaves: 15
+            class_weight: balanced
+            n_jobs: 4
+            min_child_samples: 100
+            reg_lambda: 5.0
+          random_forest:
+            n_estimators: 200
+            max_depth: 12
+            n_jobs: 4
+          xgboost:
+            n_estimators: 300
+            max_depth: 5
+            learning_rate: 0.05
+            n_jobs: 4
+    outs:
+    - path: artifacts/fairness_models
+      hash: md5
+      md5: 53b2c3cc9d60acbaf8ad014be1a8ea4b.dir
+      size: 43088563
+      nfiles: 9
+    - path: reports/fairness
+      hash: md5
+      md5: 8f85d118c8c678357ce77f83544a6272.dir
+      size: 116999
+      nfiles: 5
+  explain:
+    cmd: '"creditS/Scripts/python.exe" -m src.models.explain'
+    deps:
+    - path: artifacts/fairness_models
+      hash: md5
+      md5: 53b2c3cc9d60acbaf8ad014be1a8ea4b.dir
+      size: 43088563
+      nfiles: 9
+    - path: data/processed/X_val.csv
+      hash: md5
+      md5: e5b89cb20a20fc2f6e5087dd722fd3ad
+      size: 5481048
+    - path: src/config.py
+      hash: md5
+      md5: be76aa4c4f2b38e3399b6c05d16308d9
+      size: 3083
+    - path: src/features/contracts.py
+      hash: md5
+      md5: f8f0e5de4d8908eb8147740728d6e4fb
+      size: 965
+    - path: src/models/explain.py
+      hash: md5
+      md5: 1b3e58a561511a27cf014160ce3e3636
+      size: 11860
+    - path: src/models/fairness.py
+      hash: md5
+      md5: 5475eb9a4a64e4995095b4288009a194
+      size: 6917
+    - path: src/models/policies.py
+      hash: md5
+      md5: 1a16db04176943bf8846ea7954004d0d
+      size: 2416
+    params:
+      params.yaml:
+        data.random_state: 42
+        fairness.shap_sample_size: 400
+        mlflow.tracking_uri: http://localhost:5000
+        paths.audit_models: artifacts/fairness_models
+        paths.processed: data/processed
+        paths.shap_reports: reports/shap
+        runtime.python: creditS/Scripts/python.exe
+    outs:
+    - path: reports/shap
+      hash: md5
+      md5: 879132012c8574575688b0d763668963.dir
+      size: 1470857
+      nfiles: 12

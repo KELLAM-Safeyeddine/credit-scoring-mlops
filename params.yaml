@@ -8,6 +8,9 @@ paths:
   production: data/production
   models: models
   reports: reports
+  audit_reports: reports/fairness
+  audit_models: artifacts/fairness_models
+  shap_reports: reports/shap
 data:
   test_size: 0.2
   val_size: 0.2
@@ -63,6 +66,22 @@ fairness:
   max_auc_loss_mitigation: 0.02
   positive_label: 1
   selection_definition: acceptance
+  min_group_size: 100
+  min_class_count: 20
+  required_groups:
+    CODE_GENDER: [F, M]
+    AGE_GROUP: ['<30', '30-45', '45-60', '60+']
+  mitigation:
+    reweighing_powers: [0.5, 1.0, 1.5, 1.75, 2.0]
+    min_recall: 0.50
+    min_acceptance_rate: 0.10
+    max_acceptance_rate: 0.95
+    calibration_size: 0.20
+    reduction_eps: 0.01
+    reduction_difference_bound: 0.02
+    reduction_max_iter: 12
+  shap_sample_size: 400
+  proxy_max_features: 20
 quality_gate:
   min_auc: 0.74
   max_auc_drop_vs_prod: 0.005

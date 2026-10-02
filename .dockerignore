@@ -16,6 +16,7 @@ mlartifacts/
 data/
 notebooks/
 reports/
+artifacts/
 .wheel-cache/
 .runtime/
 .phase2-repro-check/

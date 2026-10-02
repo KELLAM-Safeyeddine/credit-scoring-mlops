@@ -52,3 +52,29 @@ stages:
       - ${paths.models}/baseline.pkl
     params: [runtime.python, monitoring, data.random_state, paths.production, paths.models, paths.processed]
     outs: ["${paths.production}"]
+  fairness:
+    cmd: '"${runtime.python}" -m src.models.mitigate'
+    deps:
+      - src/config.py
+      - src/models/mitigate.py
+      - src/models/fairness.py
+      - src/models/policies.py
+      - src/models/evaluate.py
+      - src/models/experiments.py
+      - src/models/train.py
+      - ${paths.processed}
+      - ${paths.models}/baseline.pkl
+    params: [runtime.python, fairness, train, mlflow, data.random_state, paths.processed, paths.models, paths.audit_reports, paths.audit_models]
+    outs: ["${paths.audit_models}", "${paths.audit_reports}"]
+  explain:
+    cmd: '"${runtime.python}" -m src.models.explain'
+    deps:
+      - src/config.py
+      - src/models/explain.py
+      - src/models/policies.py
+      - src/models/fairness.py
+      - src/features/contracts.py
+      - ${paths.processed}/X_val.csv
+      - ${paths.audit_models}
+    params: [runtime.python, fairness.shap_sample_size, mlflow.tracking_uri, data.random_state, paths.processed, paths.audit_models, paths.shap_reports]
+    outs: ["${paths.shap_reports}"]

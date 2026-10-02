@@ -138,3 +138,27 @@ Les scores ne sont pas des probabilités de défaut calibrées.
 La sélection sur validation peut être optimiste ; le test final reste nécessaire.
 Preuves : [docs/phase4-validation.md](docs/phase4-validation.md).
 Comparaison exécutée : [notebooks/02_baseline.ipynb](notebooks/02_baseline.ipynb).
+
+## Explicabilité et équité (phase 5)
+
+SHAP explique baseline et candidat : summary, bar et trois waterfalls par modèle,
+avec contrôle d'additivité. Fairlearn MetricFrame audite l'acceptation, le rappel
+du défaut et le FPR, par genre et âge. Les groupes insuffisants sont signalés.
+Reweighing, ThresholdOptimizer et ExponentiatedGradient sont comparés sur validation.
+
+Reweighing 1.5 atteint AUC 0,7311 (perte 1,75 point), DI genre/âge 0,987/0,814,
+et écarts TPR 0,015/0,092. Il respecte les seuils d'équité de cette étude et
+utilise un seuil global sans attribut sensible à l'inférence. Il reste sous
+le minimum AUC 0,74 du futur quality gate, et n'est pas promu.
+La prédiction auxiliaire du genre atteint AUC 0,8734, signalant des proxys possibles.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make fairness
+make test
+python -m scripts.verify_fairness
+```
+
+Analyse exécutée : [notebooks/03_fairness_analysis.ipynb](notebooks/03_fairness_analysis.ipynb).
+Preuves et limites : [docs/phase5-validation.md](docs/phase5-validation.md) ;
+[Model Card provisoire](docs/MODEL_CARD.md).

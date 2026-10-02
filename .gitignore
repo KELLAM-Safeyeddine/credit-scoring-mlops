@@ -13,6 +13,7 @@ __pycache__/
 mlruns/
 mlartifacts/
 /models/
+/artifacts/
 reports/
 data/raw/
 data/interim/
