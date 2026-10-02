@@ -1,1 +1,12 @@
-# Squelette : a completer dans la phase correspondante.
+fastapi==0.119.0
+uvicorn==0.38.0
+pydantic==2.12.3
+mlflow==3.10.1
+numpy==2.2.6
+pandas==2.3.3
+scikit-learn==1.7.2
+lightgbm==4.6.0
+xgboost-cpu==3.0.5
+shap==0.49.1
+matplotlib==3.10.7
+PyYAML==6.0.3

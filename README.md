@@ -205,3 +205,23 @@ La surveillance actuelle porte sur les lots et le candidat figés ; les scénari
 de drift complets seront ajoutés en phase 10.
 Fonctionnement, commandes et limites : [docs/airflow.md](docs/airflow.md).
 Preuves d'exécution : [docs/phase7-validation.md](docs/phase7-validation.md).
+
+## Service FastAPI (phase 8)
+
+L'API expose `/predict`, `/explain`, `/model-info`, `/health` et un rechargement
+protégé `/model/reload`. Elle charge un champion accepté, conserve le contrat
+des features et journalise les événements avec un identifiant client HMAC.
+Les données d'audit ne sont pas acceptées dans les payloads.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+make serve
+```
+
+[Documentation interactive](http://localhost:8000/docs).
+Sans champion accepté, les routes de scoring et le health répondent 503.
+Les performances offline ne qualifient pas automatiquement les entrées partielles
+de ce contrat API. Les réponses réussies et le changement de version sont testés
+avec un Registry synthétique isolé.
+Contrat, exemples et limites : [docs/api.md](docs/api.md).
+Preuves : [docs/phase8-validation.md](docs/phase8-validation.md).

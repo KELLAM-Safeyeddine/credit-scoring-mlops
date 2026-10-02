@@ -90,6 +90,8 @@ mlflow:
   experiment_name: credit-scoring
   registered_model_name: credit-scoring
   tracking_uri: http://localhost:5000
+api:
+  log_path: runtime/api/predictions.jsonl
 monitoring:
   n_batches: 8
   label_delay_batches: 2
