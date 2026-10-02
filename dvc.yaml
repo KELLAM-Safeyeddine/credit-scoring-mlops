@@ -1,1 +1,40 @@
-stages: {} # Phase 2
+stages:
+  prepare:
+    cmd: '"${runtime.python}" -m src.data.make_dataset'
+    deps:
+      - src/config.py
+      - src/data/make_dataset.py
+      - src/data/validate.py
+      - ${paths.raw}
+    params: [runtime.python, data, fairness.age_bins, fairness.age_labels, paths.raw, paths.interim]
+    outs: ["${paths.interim}"]
+  featurize:
+    cmd: '"${runtime.python}" -m src.features.build_features'
+    deps:
+      - src/config.py
+      - src/features/build_features.py
+      - ${paths.interim}
+    params: [runtime.python, features, paths.interim, paths.processed]
+    outs: ["${paths.processed}"]
+  train:
+    cmd: '"${runtime.python}" -m src.models.train'
+    deps:
+      - src/config.py
+      - src/models/train.py
+      - src/features/build_features.py
+      - ${paths.raw}
+      - ${paths.processed}
+    params: [runtime.python, train, data.random_state, paths.models, paths.reports, paths.processed]
+    outs: ["${paths.models}/baseline.pkl"]
+    metrics:
+      - ${paths.reports}/baseline_metrics.json:
+          cache: true
+  simulate_production:
+    cmd: '"${runtime.python}" -m src.data.simulate_production'
+    deps:
+      - src/config.py
+      - src/data/simulate_production.py
+      - ${paths.processed}
+      - ${paths.models}/baseline.pkl
+    params: [runtime.python, monitoring, data.random_state, paths.production, paths.models, paths.processed]
+    outs: ["${paths.production}"]
