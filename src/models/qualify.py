@@ -15,9 +15,11 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 import yaml
+from sklearn.pipeline import Pipeline
 
 from src.config import ROOT, load_config, project_path, write_json
 from src.features.contracts import EXCLUDED
+from src.features.proxy_mask import ProxyMask
 from src.models.evaluate import performance_metrics
 from src.models.experiments import build_pipeline, data_provenance
 from src.models.fairness import audit_fairness, intersection_groups, reweighing_weights
@@ -38,7 +40,7 @@ def eligible(metrics: dict, fairness: dict, cfg: dict) -> bool:
     )
 
 
-def specifications(cfg: dict) -> list[tuple[dict, float]]:
+def specifications(cfg: dict) -> list[tuple[dict, float, dict]]:
     """Reject excessive or unsafe search definitions before fitting anything."""
     settings = cfg["qualification"]
     limit = settings["max_trials"]
@@ -46,6 +48,15 @@ def specifications(cfg: dict) -> list[tuple[dict, float]]:
         raise ValueError("Qualification search must be bounded to 1–30 trials.")
     allowed = {"n_estimators", "num_leaves", "learning_rate", "min_child_samples", "reg_lambda"}
     specs = []
+    profiles = settings.get("proxy_profiles", [{"name": "unchanged", "columns": []}])
+    if not profiles or any(
+        set(profile) != {"name", "columns"}
+        or not isinstance(profile["name"], str)
+        or not isinstance(profile["columns"], list)
+        or not all(isinstance(column, str) for column in profile["columns"])
+        for profile in profiles
+    ):
+        raise ValueError("Invalid proxy profiles.")
     for parameters in settings["configurations"]:
         if set(parameters) - allowed:
             raise ValueError("Unsupported qualification hyperparameter.")
@@ -56,7 +67,8 @@ def specifications(cfg: dict) -> list[tuple[dict, float]]:
                 or not 0 <= power <= 3
             ):
                 raise ValueError("Invalid reweighing power.")
-            specs.append((dict(parameters), float(power)))
+            for profile in profiles:
+                specs.append((dict(parameters), float(power), copy.deepcopy(profile)))
     if not specs or len(specs) > limit:
         raise ValueError("Qualification trial count exceeds the configured bound.")
     return specs
@@ -76,6 +88,8 @@ def search(cfg: dict, output: Path) -> dict:
     columns = json.loads((processed / "feature_columns.json").read_text())
     if list(xt) != columns or list(xv) != columns or EXCLUDED.intersection(columns):
         raise ValueError("Qualification must retain the frozen feature contract.")
+    if any(set(profile["columns"]) - set(columns) for _, _, profile in specs):
+        raise ValueError("Unknown proxy profile columns.")
     if not yt.index.equals(xt.index) or not st.index.equals(xt.index):
         raise ValueError("Training audit alignment differs.")
     if not yv.index.equals(xv.index) or not sv.index.equals(xv.index):
@@ -99,7 +113,7 @@ def search(cfg: dict, output: Path) -> dict:
         f"{name}=={importlib.metadata.version(name)}"
         for name in ("lightgbm", "scikit-learn", "pandas", "numpy", "mlflow")
     ]
-    for number, (parameters, power) in enumerate(specs, 1):
+    for number, (parameters, power, profile) in enumerate(specs, 1):
         trial = copy.deepcopy(cfg)
         trial["train"]["lightgbm"].update(parameters)
         with mlflow.start_run(run_name=f"qualification-{output.name}-{number:02d}") as run:
@@ -118,9 +132,14 @@ def search(cfg: dict, output: Path) -> dict:
                     "reweighing_power": power,
                     "search_max_trials": len(specs),
                     "sample_frac": cfg["data"]["sample_frac"],
+                    "proxy_profile": profile["name"],
                 }
             )
             pipeline = build_pipeline("lightgbm", trial)
+            if profile["columns"]:
+                pipeline = Pipeline(
+                    [("proxy_mask", ProxyMask(tuple(profile["columns"]))), *pipeline.steps]
+                )
             start = time.perf_counter()
             pipeline.fit(xt, yt, model__sample_weight=weights**power)
             duration = time.perf_counter() - start
@@ -140,6 +159,7 @@ def search(cfg: dict, output: Path) -> dict:
             mlflow.log_dict(fairness, "fairness_report.json")
             mlflow.log_dict(trial, "params.json")
             mlflow.log_dict(columns, "feature_columns.json")
+            mlflow.log_dict(profile, "proxy_mask.json")
             mlflow.log_artifact(str(processed / "feature_encoder.pkl"), "features")
             if expansion_root:
                 for filename in ("processed.dvc", "interim.dvc", "split_manifest.json"):
@@ -154,6 +174,7 @@ def search(cfg: dict, output: Path) -> dict:
                 "run_id": run.info.run_id,
                 "parameters": parameters,
                 "power": power,
+                "proxy_profile": profile["name"],
                 "threshold": threshold,
                 "validation_auc": metrics["validation_auc"],
                 "eligible": bool(usable),
@@ -162,6 +183,8 @@ def search(cfg: dict, output: Path) -> dict:
                 "age_eo": fairness["attributes"]["AGE_GROUP"]["equal_opportunity_difference"],
                 "gender_di": fairness["attributes"]["CODE_GENDER"]["disparate_impact"],
                 "gender_eo": fairness["attributes"]["CODE_GENDER"]["equal_opportunity_difference"],
+                "validation_recall": metrics["validation_recall"],
+                "validation_acceptance_rate": metrics["validation_acceptance_rate"],
             }
             if usable and (best is None or row["validation_auc"] > best["validation_auc"]):
                 logged = mlflow.sklearn.log_model(
@@ -184,7 +207,8 @@ def search(cfg: dict, output: Path) -> dict:
                 }
                 (output / "candidate.pkl").write_bytes(pickle.dumps(bundle))
                 write_json(
-                    output / "selected_params.json", {"parameters": parameters, "power": power}
+                    output / "selected_params.json",
+                    {"parameters": parameters, "power": power, "proxy_profile": profile},
                 )
                 best = row
             rows.append(row)

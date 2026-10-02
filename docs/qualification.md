@@ -142,3 +142,72 @@ MLflow ; les six résultats du tableau proviennent uniquement de la relance term
 Validation finale exécutée dans `creditS` : **109 tests réussis en 30,92 secondes**,
 25 avertissements connus, Ruff sans erreur et 82 fichiers Python formatés.
 Les six runs ont le statut `FINISHED` et portent le hash DVC attendu.
+
+## Campagne de réduction des proxys
+
+Neuf essais supplémentaires sur le même snapshot à 20 %, dans la campagne
+`8e316de7f5c3`, comparent trois profils et trois puissances de repondération
+(0,5 ; 1,0 ; 1,25). LightGBM utilise 300 arbres, 15 feuilles,
+`learning_rate=0.03`, `min_child_samples=100` et `reg_lambda=10`.
+La sélection repose uniquement sur train/validation ; aucun résultat de test
+n'est utilisé. Les règles du gate sont inchangées.
+
+Le diagnostic utilise la corrélation de Pearson sur le train : `EXT_SOURCE_1`
+avec l'âge vaut environ 0,606 ; les indicateurs de retraite et d'emploi sont
+aussi fortement liés à l'âge. Ces associations ne constituent pas une preuve
+causale de discrimination. [Diagnostic](assets/qualification-proxies/age_correlations.json).
+
+- `external` neutralise `EXT_SOURCE_1` et `EXT_SOURCE_MEAN`, qui contient aussi
+  le score externe 1. Les scores 2 et 3 restent disponibles séparément.
+- `employment` neutralise 88 colonnes : catégories de revenu, employeur,
+  profession, ancienneté, anomalie d'emploi et deux indicateurs associés.
+- `combined` neutralise les deux ensembles, soit 90 colonnes.
+
+`ProxyMask`, intégré au pipeline persisté, remplace ces entrées par zéro avant
+l'imputation à l'entraînement et à l'inférence. Le contrat externe conserve
+les 264 colonnes, leur ordre et les index. Les colonnes neutralisées ne peuvent
+plus influer sur ce modèle et leurs contributions Tree SHAP sont nulles.
+Cette neutralisation n'élimine pas les autres proxys présents dans les données.
+
+| Essai | Profil | Puissance | AUC | DI âge | Écart EO âge | Seuil équitable et utile |
+|---|---|---:|---:|---:|---:|---|
+| 1 | external | 0,5 | 0,73843 | 0,69453 | 0,15177 | Non |
+| 2 | employment | 0,5 | 0,74690 | 0,72452 | 0,17390 | Non |
+| 3 | combined | 0,5 | 0,73431 | 0,75043 | 0,14794 | Non |
+| 4 | external | 1,0 | 0,73119 | 0,79902 | 0,10728 | Non |
+| 5 | employment | 1,0 | 0,73970 | 0,76955 | 0,13325 | Non |
+| 6 | combined | 1,0 | 0,72890 | 0,79223 | 0,08387 | Non |
+| 7 | external | 1,25 | 0,72913 | 0,81485 | 0,08025 | Oui, AUC insuffisante |
+| 8 | employment | 1,25 | 0,73526 | 0,75455 | 0,09963 | Non |
+| 9 | combined | 1,25 | 0,72459 | 0,80169 | 0,07407 | Oui, AUC insuffisante |
+
+**Aucun candidat qualifiable.** Les neuf runs sont `FINISHED` dans MLflow et
+les alias Home Credit restent vides dans les deux Registry. Les modèles
+éliminés n'ont pas fait l'objet d'une promotion ni du gate final SHAP.
+Le test de compatibilité SHAP a été exécuté sur une fixture entraînée avec
+LightGBM ; il ne constitue pas un artefact d'explicabilité d'un champion réel.
+Les masks exacts, métriques d'utilité, paramètres et rapports Fairlearn sont
+loggés dans chaque run. Le snapshot DVC processed reste
+`df0b7377bfe4fa4d60f8ac341224774e.dir`.
+
+[Résultats complets](assets/qualification-proxies/search.json) et
+[configuration reproductible](assets/qualification-proxies/params.yaml).
+Après récupération du snapshot étendu documentée ci-dessus :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m src.models.qualify --params docs/assets/qualification-proxies/params.yaml
+python -m pytest -q
+python -m ruff check .
+```
+
+Cette campagne ne montre pas d'amélioration suffisante du compromis. Une piste
+distincte à examiner serait une repondération ciblée sur l'âge seul, au lieu
+des intersections genre/âge ; elle doit toujours auditer les deux attributs
+et conserver les mêmes seuils. La répétition des campagnes sur cette validation
+renforce la nécessité d'évaluer une seule fois le candidat figé sur le test réservé.
+
+Validation exécutée dans `creditS` : **111 tests réussis en 39,53 secondes**,
+27 avertissements de dépendances, Ruff sans erreur et 84 fichiers formatés.
+Les tests vérifient l'invariance des scores aux valeurs masquées, leur attribution
+SHAP nulle, la conservation du contrat et le rejet d'une entrée mal ordonnée.

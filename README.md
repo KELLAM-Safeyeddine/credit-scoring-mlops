@@ -231,6 +231,8 @@ de production dans un dataset d'entraînement n'est pas implémentée.
 aucun candidat franchissant simultanément les seuils d'AUC et d'équité.
 Une campagne supplémentaire à 20 % des données conserve les réserves existantes ;
 ses six essais ne fournissent pas davantage de champion qualifiable.
+Neuf essais de neutralisation de proxys ne franchissent pas non plus le gate ;
+les profils, résultats et limites sont consignés dans la même documentation.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les dernières validations.
