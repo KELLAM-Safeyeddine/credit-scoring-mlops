@@ -102,6 +102,16 @@ dépassent 0,74 d'AUC validation mais échouent sur l'écart EO âge (0,17183 à
 aucun champion qualifié. Les résultats ci-dessus concernent exclusivement
 le candidat historique étendu, distinct de ce protocole prospectif.
 
+Une [étude de développement ultérieure à coûts métier](constrained-development.md)
+réutilise le train et la validation v2, sans ouvrir son test. Quatre réductions
+Fairlearn et huit scores déterministes sont mesurés. EqualizedOdds sur
+l'intersection genre–âge, avec moyenne des probabilités et seuil global 0,492,
+respecte DI/EO et utilité sur validation : DI âge 0,94501, EO âge 0,05894,
+DI genre 0,97053, EO genre 0,03238, recall 0,58186. Son AUC 0,73665 échoue au
+minimum de 0,74 ; aucun point n'est qualifié. Ces scores déterministes ne
+bénéficient pas des garanties de la politique aléatoire originale, ne sont pas
+calibrés, et ne sont ni expliqués par SHAP ici ni enregistrés ou promus.
+
 Les paragraphes et tableaux suivants conservent les résultats historiques
 de l'étude à 10 %, distincts de ce candidat étendu.
 

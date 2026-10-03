@@ -9,12 +9,17 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 126 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 133 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
 écart d'égalité des chances 0,25758. Il est enregistré comme rejeté, sans promotion.
 Les résultats synthétiques ne qualifient pas un usage réel de crédit.
+
+Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
+quatre entraînements contraints et huit scores déterministes sur le développement.
+Le point respectant l'équité atteint une AUC de 0,73665, sous le minimum de 0,74.
+Aucun point ne passe toutes les règles ; le test du protocole v2 reste fermé.
 
 ## Architecture
 
