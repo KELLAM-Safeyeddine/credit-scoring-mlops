@@ -326,9 +326,12 @@ correspond au candidat historique étendu, distinct de cette réexécution.
 
 L'ensemble déterministe de sept oracles LightGBM possède désormais des
 explications SHAP en espace de probabilité, vérifiées sur 400 observations de
-validation avec un fond issu uniquement du train. Le plan de qualification est
-figé avant consultation du test v2 ; le modèle n'est pas promu et son score reste
-non calibré. [Preuves et limites](ensemble-qualification.md).
+validation avec un fond issu uniquement du train. Après gel du plan, le test v2
+sur 14 761 clients donne AUC 0,74159, DI âge 0,79575 et écart equal opportunity
+âge 0,11249. Ces deux métriques d'équité échouent aux limites 0,8 et 0,10 :
+la version 5 du Registry local est rejetée, sans champion Home Credit. Ce test
+est désormais fermé à la sélection et le score reste non calibré.
+[Preuves et limites](ensemble-qualification.md).
 
 Définir la population cible, le responsable, une revue humaine effective et un
 recours compréhensible ; valider les droits d'usage et la minimisation des données.

@@ -1,0 +1,17 @@
+{
+  "candidate_and_source_hashes_verified": true,
+  "failed_test_rules": [
+    "AGE_GROUP.disparate_impact",
+    "AGE_GROUP.equal_opportunity_difference"
+  ],
+  "gate_status": "rejected",
+  "home_credit_aliases": {},
+  "ledger_status": "evaluated",
+  "registry_version": "5",
+  "run_id": "ab7cbd43f1ac4cf58cc7715e1733ab80",
+  "test_evaluated": true,
+  "test_passed": false,
+  "test_retuning_allowed": false,
+  "test_rows": 14761,
+  "threshold": 0.41700000000000004
+}

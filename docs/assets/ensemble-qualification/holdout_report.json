@@ -1,0 +1,249 @@
+{
+  "data_sha256": {
+    "X_test.csv": "6969a47bb50601afd3d227ab19df664d1229bd36f2d1826175cef34cf5f8be23",
+    "sensitive_test.csv": "567bc5ba2b5d7fff05c870354c748569272052fd88622d481d26c95930e71436",
+    "y_test.csv": "9223ae85a3a131e6921c6ce7a577270f291b2ad21cb7bc134bdb7641e09056f4"
+  },
+  "evaluation_split": "test",
+  "failed_rules": [
+    "AGE_GROUP.disparate_impact",
+    "AGE_GROUP.equal_opportunity_difference"
+  ],
+  "fairness_report": {
+    "attributes": {
+      "AGE_GROUP": {
+        "by_group": {
+          "30-45": {
+            "acceptance_rate": 0.5549932523616734,
+            "auc": 0.7537862859377429,
+            "comparison_eligible": true,
+            "default_rate": 0.09379217273954116,
+            "defaults": 556,
+            "fpr": 0.41083395383469845,
+            "non_defaults": 5372,
+            "refusal_rate": 0.4450067476383266,
+            "rows": 5928,
+            "tpr": 0.7751798561151079
+          },
+          "45-60": {
+            "acceptance_rate": 0.6017255216693419,
+            "auc": 0.7062831679417496,
+            "comparison_eligible": true,
+            "default_rate": 0.06721508828250401,
+            "defaults": 335,
+            "fpr": 0.3792213379221338,
+            "non_defaults": 4649,
+            "refusal_rate": 0.3982744783306581,
+            "rows": 4984,
+            "tpr": 0.6626865671641791
+          },
+          "60+": {
+            "acceptance_rate": 0.6768953068592057,
+            "auc": 0.749329972694812,
+            "comparison_eligible": true,
+            "default_rate": 0.04512635379061372,
+            "defaults": 75,
+            "fpr": 0.3056080655324512,
+            "non_defaults": 1587,
+            "refusal_rate": 0.32310469314079426,
+            "rows": 1662,
+            "tpr": 0.6933333333333334
+          },
+          "<30": {
+            "acceptance_rate": 0.5386374028349337,
+            "auc": 0.7382227777953274,
+            "comparison_eligible": true,
+            "default_rate": 0.10333790580704161,
+            "defaults": 226,
+            "fpr": 0.4263131055583886,
+            "non_defaults": 1961,
+            "refusal_rate": 0.46136259716506633,
+            "rows": 2187,
+            "tpr": 0.7654867256637168
+          }
+        },
+        "comparison_coverage": 1.0,
+        "demographic_parity_difference": 0.13825790402427207,
+        "disparate_impact": 0.7957469897881421,
+        "eligible_groups": [
+          "30-45",
+          "45-60",
+          "60+",
+          "<30"
+        ],
+        "equal_opportunity_difference": 0.1124932889509288,
+        "equalized_odds_difference": 0.1207050400259374,
+        "passes_thresholds": false,
+        "sufficient_support": true
+      },
+      "CODE_GENDER": {
+        "by_group": {
+          "F": {
+            "acceptance_rate": 0.5913319022794644,
+            "auc": 0.7453388410413451,
+            "comparison_eligible": true,
+            "default_rate": 0.07093938464683634,
+            "defaults": 694,
+            "fpr": 0.3833204973044339,
+            "non_defaults": 9089,
+            "refusal_rate": 0.4086680977205356,
+            "rows": 9783,
+            "tpr": 0.7406340057636888
+          },
+          "M": {
+            "acceptance_rate": 0.5638810767376456,
+            "auc": 0.7344498529833619,
+            "comparison_eligible": true,
+            "default_rate": 0.10004017677782241,
+            "defaults": 498,
+            "fpr": 0.40334821428571427,
+            "non_defaults": 4480,
+            "refusal_rate": 0.43611892326235435,
+            "rows": 4978,
+            "tpr": 0.7309236947791165
+          }
+        },
+        "comparison_coverage": 1.0,
+        "demographic_parity_difference": 0.02745082554181877,
+        "disparate_impact": 0.9535779729860652,
+        "eligible_groups": [
+          "F",
+          "M"
+        ],
+        "equal_opportunity_difference": 0.009710310984572312,
+        "equalized_odds_difference": 0.020027716981280363,
+        "passes_thresholds": true,
+        "sufficient_support": true
+      }
+    },
+    "equal_opportunity_definition": "max-min TPR of refusal among actual defaults",
+    "passes_thresholds": false,
+    "positive_definition": "1 = default predicted = refusal",
+    "selection_definition": "acceptance = 1 - predicted_default",
+    "support_policy": {
+      "min_class_count": 20,
+      "min_group_size": 100,
+      "unknown_gender": "XNA reported but outside known-gender comparisons"
+    }
+  },
+  "frozen_threshold": 0.41700000000000004,
+  "metrics": {
+    "randomized_decision": false,
+    "requires_sensitive_at_inference": false,
+    "test_acceptance_rate": 0.5820743852042545,
+    "test_auc": 0.7415912010252346,
+    "test_business_cost": 8431.0,
+    "test_fn": 314.0,
+    "test_fp": 5291.0,
+    "test_gini": 0.48318240205046914,
+    "test_ks": 0.3665731476356737,
+    "test_pr_auc": 0.22275045516323488,
+    "test_precision": 0.14232452585508187,
+    "test_recall": 0.7365771812080537,
+    "test_tn": 8278.0,
+    "test_tp": 878.0,
+    "threshold": 0.41700000000000004
+  },
+  "passed": false,
+  "rows": 14761,
+  "rules": {
+    "AGE_GROUP.disparate_impact": {
+      "actual": 0.7957469897881421,
+      "passed": false,
+      "requirement": 0.8
+    },
+    "AGE_GROUP.equal_opportunity_difference": {
+      "actual": 0.1124932889509288,
+      "passed": false,
+      "requirement": 0.1
+    },
+    "AGE_GROUP.support": {
+      "actual": [
+        "30-45",
+        "45-60",
+        "60+",
+        "<30"
+      ],
+      "passed": true,
+      "requirement": [
+        "<30",
+        "30-45",
+        "45-60",
+        "60+"
+      ]
+    },
+    "CODE_GENDER.disparate_impact": {
+      "actual": 0.9535779729860652,
+      "passed": true,
+      "requirement": 0.8
+    },
+    "CODE_GENDER.equal_opportunity_difference": {
+      "actual": 0.009710310984572312,
+      "passed": true,
+      "requirement": 0.1
+    },
+    "CODE_GENDER.support": {
+      "actual": [
+        "F",
+        "M"
+      ],
+      "passed": true,
+      "requirement": [
+        "F",
+        "M"
+      ]
+    },
+    "acceptance_bounds": {
+      "actual": 0.5820743852042545,
+      "passed": true,
+      "requirement": [
+        0.1,
+        0.95
+      ]
+    },
+    "auc_vs_production": {
+      "actual": null,
+      "passed": true,
+      "requirement": "first promotion: no production comparator"
+    },
+    "group_free_deterministic_inference": {
+      "actual": {
+        "randomized_decision": false,
+        "requires_sensitive_at_inference": false
+      },
+      "passed": true,
+      "requirement": "deterministic scoring without protected attributes at inference"
+    },
+    "minimum_auc": {
+      "actual": 0.7415912010252346,
+      "passed": true,
+      "requirement": 0.74
+    },
+    "minimum_recall": {
+      "actual": 0.7365771812080537,
+      "passed": true,
+      "requirement": 0.5
+    },
+    "shap_artifacts": {
+      "actual": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ],
+      "passed": true,
+      "requirement": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ]
+    }
+  },
+  "run_id": "ab7cbd43f1ac4cf58cc7715e1733ab80",
+  "selection_or_retuning_allowed": false
+}

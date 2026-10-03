@@ -9,7 +9,7 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 139 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 144 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
@@ -23,13 +23,16 @@ Home Credit explicitement conservée.
 Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
 quatre entraînements contraints et huit scores déterministes sur le développement.
 Le point respectant l'équité atteint une AUC de 0,73665, sous le minimum de 0,74.
-Aucun point ne passe toutes les règles ; le test du protocole v2 reste fermé.
+Aucun point de cette campagne ne passe toutes les règles. Le test v2 a depuis
+été évalué une seule fois sur l'ensemble figé : rejet pour équité par âge.
 
 L'[étude de capacité Fairlearn](docs/constrained-capacity-development.md) ultérieure
 trouve un ensemble déterministe passant le screening de développement : AUC
 0,74725, DI âge 0,80968, EO âge 0,09605. L'instantané est figé et vérifié après
-rechargement. **Il n'est pas qualifié ni promu** : SHAP d'ensemble et évaluation
-indépendante restent à réaliser selon un plan figé ; le test v2 reste fermé.
+rechargement. Les explications SHAP ont ensuite été vérifiées et le test unique
+exécuté selon un plan figé : AUC 0,74159, DI âge 0,79575, EO âge 0,11249.
+**Il est rejeté et non promu**. Le test v2 est désormais fermé à la sélection.
+[Rapport de qualification](docs/ensemble-qualification.md).
 
 ## Architecture
 
@@ -246,7 +249,8 @@ de production dans un dataset d'entraînement n'est pas implémentée.
 [Architecture](docs/architecture.md), [Docker](docs/docker.md),
 [Airflow](docs/airflow.md), [Model Card](docs/MODEL_CARD.md).
 [Ensemble figé : SHAP et qualification](docs/ensemble-qualification.md) : preuves
-SHAP exécutées, plan figé, promotion bloquée jusqu'au test indépendant v2.
+SHAP exécutées et test indépendant v2 évalué : AUC 0,74159, échec des deux règles
+d'équité par âge, version locale 5 rejetée et aucun champion Home Credit.
 [Recherche complémentaire de qualification](docs/qualification.md) : 18 essais,
 aucun candidat franchissant simultanément les seuils d'AUC et d'équité.
 Une campagne supplémentaire à 20 % des données conserve les réserves existantes ;
@@ -257,7 +261,8 @@ La repondération par âge franchit la validation, mais échoue sur le test ind�
 Le gate prend désormais cet échec en compte avant toute promotion de ce candidat.
 [Nouveau protocole prospectif](docs/protocol-v2.md) : affectations figées sur
 92 253 autres clients, six essais préspécifiés exécutés. Aucun candidat admissible
-sur validation ; le nouveau test reste fermé, sans ajout adaptatif ni promotion.
+sur validation à la clôture de ces six essais. L'ensemble développé ensuite
+échoue au test indépendant v2, désormais fermé à la sélection, sans promotion.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les validations de ces phases ; le [bilan final](docs/final-validation.md)
