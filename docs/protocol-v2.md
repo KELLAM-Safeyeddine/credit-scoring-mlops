@@ -1,8 +1,10 @@
 # Protocole prospectif Home Credit v2
 
 Figé le **3 octobre 2026**, identifiant `home-credit-independent-v2`.
-Ce protocole prépare une nouvelle campagne ; aucun modèle n'a encore été
-entraîné et aucun résultat prédictif du nouveau test n'a été consulté.
+Les six essais préspécifiés ont été exécutés après validation utilisateur.
+Aucun candidat ne franchit les contraintes de validation ; aucun résultat
+prédictif du nouveau test n'a été consulté. Les règles ci-dessous sont celles
+figées avant l'entraînement et n'ont pas été modifiées après les résultats.
 Le précédent candidat reste rejeté : il passe la validation mais échoue sur
 l'équité du test indépendant. [Historique et décision](qualification.md).
 
@@ -81,7 +83,7 @@ avant fit ; l'évaluateur vérifie celle du test. Modifier les règles ou rempla
 les IDs provoque un refus. Les contrôles locaux évitent les erreurs de protocole ;
 ils ne constituent pas une protection contre un opérateur qui modifierait les fichiers.
 
-Le registre du nouveau test sera
+Le registre du nouveau test est prévu sous
 `runtime/qualification-holdouts/home-credit-independent-v2.json`.
 Il n'existe pas encore. Le registre du test historique est conservé intact,
 avec son candidat rejeté et ses résultats ; il n'est ni effacé ni réinitialisé.
@@ -109,11 +111,78 @@ Preuves exécutées : création des splits, vérification des SHA-256 et des
 exclusions, résolution du nouveau registre, DVC push/status, **122 tests réussis
 en 30,40 secondes**, 27 avertissements de dépendances, Ruff sans erreur et
 89 fichiers Python formatés. Aucun fit, rapport de performance ou promotion
-n'a été exécuté pour ce protocole.
+n'avait été exécuté à la fin de l'étape de définition de ce protocole.
 
 Cette indépendance concerne les affectations de clients dans le même dataset
 Kaggle. Les choix méthodologiques bénéficient des campagnes historiques ; ce
 protocole ne fournit pas une validation temporelle, une validation bancaire
-externe ou une garantie de généralisation. L'étape suivante préparera les
-features à partir des affectations figées et lancera les six essais, après
-validation utilisateur du protocole.
+externe ou une garantie de généralisation.
+
+## Exécution des six essais
+
+`src.data.prepare_protocol` matérialise les IDs figés depuis la source validée
+avec Pandera, sans aucun nouveau split. Les tests vérifient les labels conservés,
+l'absence de réaffectation, le nettoyage local et le refus des IDs inconnus,
+dupliqués ou partagés entre splits. Les historiques sont agrégés pour 92 253
+clients, avec cutoff au jour 0. L'encodeur apprend uniquement sur train :
+le nouveau contrat contient **263 features**, ordonnées identiquement pour
+train/val/test/production et sans attribut sensible ni identifiant.
+La préparation transforme le test pour exporter des fichiers cohérents,
+mais aucun score, métrique de performance ou d'équité de test n'est calculé.
+
+Snapshot DVC des sorties, poussé avant entraînement :
+
+- interim : `eaa86426b8d3247c959e83152de9e007.dir`, 4 fichiers ;
+- processed : `d31d9df8f7826e1ac2309fff126ab0f9.dir`, 16 fichiers ;
+- 22 fichiers poussés, manifests de répertoires compris.
+
+Campagne MLflow `d391f2ba32cf`, expérience locale `credit-scoring-qualification` :
+six runs **FINISHED**, tous avec l'identifiant du protocole, le manifeste,
+les hashes exacts des entrées train/validation, les descripteurs DVC, le contrat,
+l'encodeur, les paramètres et les rapports Fairlearn. Le seed, les puissances,
+les deux modèles et la grille de seuils restent exactement ceux figés.
+
+| Essai | Config. | Puissance | AUC validation | DI âge | Écart EO âge |
+|---|---|---:|---:|---:|---:|
+| 1 | A | 1,5 | 0,75243 | 0,79856 | 0,21412 |
+| 2 | A | 1,6 | 0,75099 | 0,80003 | 0,19823 |
+| 3 | A | 1,75 | 0,74922 | 0,83193 | 0,17183 |
+| 4 | B | 1,5 | 0,75268 | 0,78469 | 0,23712 |
+| 5 | B | 1,6 | 0,75094 | 0,79924 | 0,23712 |
+| 6 | B | 1,75 | 0,74892 | 0,82042 | 0,18422 |
+
+Les six AUC dépassent 0,74, mais l'écart EO âge dépasse 0,10 dans chaque essai.
+La grille de 981 seuils ne trouve aucun point satisfaisant simultanément
+équité et utilité. Les seuils affichés dans les rapports sont des diagnostics
+de moindre pénalité, **pas des points acceptés**. Les audits genre respectent
+leurs limites aux points rapportés ; cela ne compense pas l'échec sur l'âge.
+
+**Aucun candidat admissible.** Aucun ajout adaptatif, aucune sélection alternative
+sur le test, aucun calcul SHAP de candidat à promouvoir, aucun enregistrement
+ou changement d'alias Registry. Le registre du nouveau test demeure absent.
+Les alias Home Credit restent vides aux ports 5000 et 5001. Le résultat ne
+prouve pas qu'une qualification est impossible ; cette mitigation ne satisfait
+pas ici les contraintes sur cette validation indépendante des anciennes campagnes.
+
+[Résultats complets](assets/protocol-v2/search.json) et
+[preuves d'exécution](assets/protocol-v2/execution.json), également suivis par
+DVC et poussés au remote. Le manifeste de définition reste inchangé avec son
+statut historique `memberships_frozen_no_training` ; l'état de la campagne
+est conservé séparément dans `execution.json`.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m pytest -q
+python -m ruff check .
+$protocolPython = (Resolve-Path .\creditS\Scripts\python.exe).Path
+Push-Location runtime/protocol-v2
+& $protocolPython -m dvc status
+Pop-Location
+```
+
+Validation finale : **126 tests réussis en 32,97 secondes**, 27 avertissements
+de dépendances, Ruff sans erreur et 91 fichiers Python formatés. Les hashes
+du protocole figé restent valides ; ses six essais ont été exécutés une seule
+fois. Les sorties de préparation sont restaurables par DVC, et le script refuse
+de les écraser. Une nouvelle étude éventuelle nécessitera un plan explicite ;
+elle ne doit pas être présentée comme un ajout aux six essais préspécifiés.

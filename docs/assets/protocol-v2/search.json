@@ -1,0 +1,164 @@
+{
+  "best": null,
+  "output": "C:\\Users\\SafeyeddineK\\Desktop\\Projet\\credit-scoring-mlops\\runtime\\qualification\\d391f2ba32cf",
+  "status": "no_eligible_candidate",
+  "test_split": "untouched",
+  "trials": [
+    {
+      "age_di": 0.7985640097387776,
+      "age_eo": 0.21412085209429038,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9234319719729327,
+      "gender_eo": 0.02226998644009115,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.5,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "47817193f1734c6fb511a539f320aaea",
+      "threshold": 0.5820000000000001,
+      "trial": 1,
+      "validation_acceptance_rate": 0.7778455284552845,
+      "validation_auc": 0.7524331124948401,
+      "validation_recall": 0.5365239294710328
+    },
+    {
+      "age_di": 0.8000316562777028,
+      "age_eo": 0.19822921790457454,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.92357329837795,
+      "gender_eo": 0.023461527365050028,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.6,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "defbe30b24104e9bba45106916dc770c",
+      "threshold": 0.5720000000000001,
+      "trial": 2,
+      "validation_acceptance_rate": 0.7609756097560976,
+      "validation_auc": 0.750989918183512,
+      "validation_recall": 0.5549958018471872
+    },
+    {
+      "age_di": 0.8319304373450366,
+      "age_eo": 0.17183416184082412,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9332376212959917,
+      "gender_eo": 0.02606387582585612,
+      "parameters": {
+        "learning_rate": 0.05,
+        "min_child_samples": 80,
+        "n_estimators": 300,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "power": 1.75,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "2b10b4a3f450482c862a9d02f73ef698",
+      "threshold": 0.594,
+      "trial": 3,
+      "validation_acceptance_rate": 0.787940379403794,
+      "validation_auc": 0.7492157353041912,
+      "validation_recall": 0.5130142737195634
+    },
+    {
+      "age_di": 0.7846921717487285,
+      "age_eo": 0.23712396863629376,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9213387029049128,
+      "gender_eo": 0.01647096159949224,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 300,
+        "num_leaves": 15,
+        "reg_lambda": 5.0
+      },
+      "power": 1.5,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "3c18393d1f8c464486b6f21a7aff5c02",
+      "threshold": 0.5780000000000001,
+      "trial": 4,
+      "validation_acceptance_rate": 0.7817750677506775,
+      "validation_auc": 0.7526832876267142,
+      "validation_recall": 0.5340050377833753
+    },
+    {
+      "age_di": 0.7992360182076718,
+      "age_eo": 0.23712396863629376,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9274712867948618,
+      "gender_eo": 0.010253599146014203,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 300,
+        "num_leaves": 15,
+        "reg_lambda": 5.0
+      },
+      "power": 1.6,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "9bc798e6dfb74f9587a5fbe9b0afe7d5",
+      "threshold": 0.5850000000000001,
+      "trial": 5,
+      "validation_acceptance_rate": 0.7893631436314363,
+      "validation_auc": 0.7509363313261777,
+      "validation_recall": 0.5197313182199832
+    },
+    {
+      "age_di": 0.8204192348911918,
+      "age_eo": 0.18421683251983306,
+      "eligible": false,
+      "fair_threshold_feasible": false,
+      "gender_di": 0.9325406907350622,
+      "gender_eo": 0.005605724012578972,
+      "parameters": {
+        "learning_rate": 0.03,
+        "min_child_samples": 100,
+        "n_estimators": 300,
+        "num_leaves": 15,
+        "reg_lambda": 5.0
+      },
+      "power": 1.75,
+      "proxy_profile": "unchanged",
+      "reweighing_scope": [
+        "AGE_GROUP"
+      ],
+      "run_id": "81e9ed3be7634a0ca982b36e4618eba2",
+      "threshold": 0.5800000000000001,
+      "trial": 6,
+      "validation_acceptance_rate": 0.7806233062330623,
+      "validation_auc": 0.7489242252754355,
+      "validation_recall": 0.5348446683459278
+    }
+  ]
+}

@@ -194,7 +194,8 @@ def search(cfg: dict, output: Path) -> dict:
             mlflow.log_dict(profile, "proxy_mask.json")
             mlflow.log_artifact(str(processed / "feature_encoder.pkl"), "features")
             if expansion_root:
-                for filename in ("processed.dvc", "interim.dvc", "split_manifest.json"):
+                manifest_file = "protocol.json" if protocol else "split_manifest.json"
+                for filename in ("processed.dvc", "interim.dvc", manifest_file):
                     mlflow.log_artifact(str(expansion_root / filename), "provenance/expansion")
             with tempfile.TemporaryDirectory(prefix="credit-qualification-") as temporary:
                 snapshot = Path(temporary) / "dvc.lock"

@@ -96,7 +96,11 @@ candidats ou seuils en conservant un statut d'évaluation indépendante.
 [Protocole, provenance DVC et rapports](qualification.md).
 Un [nouveau protocole prospectif](protocol-v2.md) exclut tous les clients de
 ces campagnes et fige les nouvelles affectations avant entraînement. Il est
-préparé, sans nouveau résultat prédictif ni champion qualifié.
+exécuté sur 92 253 clients avec un contrat de 263 features : les six essais
+dépassent 0,74 d'AUC validation mais échouent sur l'écart EO âge (0,17183 à
+0,23712). Aucun candidat sélectionné, aucun score de ce nouveau test calculé,
+aucun champion qualifié. Les résultats ci-dessus concernent exclusivement
+le candidat historique étendu, distinct de ce protocole prospectif.
 
 Les paragraphes et tableaux suivants conservent les résultats historiques
 de l'étude à 10 %, distincts de ce candidat étendu.
