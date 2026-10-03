@@ -1,12 +1,14 @@
 # Model Card — Home Credit et état de qualification
 
-Date de revue : **2 octobre 2026**. Usage prévu : apprentissage MLOps, analyse
+Date de revue : **3 octobre 2026**. Usage prévu : apprentissage MLOps, analyse
 offline du risque, explicabilité et audit d'équité. Responsable opérationnel,
 population bancaire cible et procédure de recours ne sont pas définis : ce dépôt
 n'est pas autorisé à prendre des décisions réelles d'octroi ou de refus de crédit.
 
 **Statut : aucun champion Home Credit accepté.** Le Registry local contient
-les versions 1–2 rejetées ; le Registry Docker contient les versions 1–5 rejetées.
+les versions 1–3 rejetées ; le Registry Docker contient les versions 1–5 rejetées.
+La version locale 3 passe le gate de validation mais échoue à l'équité par âge
+sur test indépendant. Elle n'est pas promue et n'est pas transférée au Registry Docker.
 Les modèles `credit-demo-*` acceptés appartiennent exclusivement à la démonstration
 synthétique. Le biais est mesuré et contrôlé selon les métriques décrites sur les
 échantillons évalués ; aucune garantie générale d'absence de discrimination n'est donnée.
@@ -54,8 +56,47 @@ Le meilleur modèle de ranking est LightGBM 4.6.0 : 150 arbres, learning rate 0,
 Le candidat mitigé réutilise cette famille avec des poids de reweighing puissance
 1,5 estimés sur les intersections genre/âge et label du train.
 La sélection des modèles, hyperparamètres, seuils et mitigations utilise la
-validation ; ses métriques peuvent donc être optimistes. Le test indépendant
-reste réservé et aucune performance finale de test n'est revendiquée.
+validation ; ses métriques peuvent donc être optimistes. Ces résultats décrivent
+l'étude historique à 10 %. Un candidat figé de la campagne étendue à 20 % a
+ensuite été évalué une seule fois sur test, avec les résultats ci-dessous.
+
+### Candidat figé de la campagne étendue — rejet indépendant
+
+Run `1cdba5300ddc4326aed25e76d99a36b9`, version locale 3 : LightGBM,
+300 arbres, 15 feuilles, learning rate 0,03, min_child_samples=100, L2=10,
+class_weight=balanced. Repondération calculée uniquement sur les groupes d'âge
+et TARGET du train, puissance 1,6. Contrat de 264 features, attributs sensibles
+exclus, seuil global **0,587**, aucun attribut sensible requis à l'inférence.
+Les 29 520 dossiers train, 9 840 validation et 9 840 test sont disjoints.
+
+| Métrique | Validation | Test indépendant |
+|---|---:|---:|
+| AUC | 0,74113 | 0,74618 |
+| Recall du défaut | 0,50378 | 0,53023 |
+| Acceptation | 0,80559 | 0,79970 |
+| DI genre | 0,95764 | 0,94729 |
+| Écart EO genre | 0,02397 | 0,00476 |
+| DI âge | 0,81943 | **0,79692 : échec** |
+| Écart EO âge | 0,09464 | **0,25758 : échec** |
+
+Sur test, le TPR du refus est de 0,65341 pour les moins de 30 ans,
+0,54054 pour 30–45, 0,43500 pour 45–60 et 0,39583 pour 60+.
+Le groupe 60+ contient 1 077 dossiers dont 48 défauts ; le groupe <30 en
+contient 1 452 dont 176 défauts. Les supports satisfont le gate, mais les
+métriques restent sensibles à l'échantillonnage. Les résultats montrent que
+le respect des seuils sur validation ne se généralise pas ici à l'échantillon
+indépendant. **Le candidat est rejeté.**
+
+Les six artefacts SHAP sont présents ; l'erreur maximale de reconstruction
+des probabilités est de 9,99×10⁻¹⁶. Cela ne corrige pas l'échec d'équité.
+La promotion vérifie également le rapport indépendant quand il existe,
+recalcule les règles et refuse ce candidat même si la validation est réussie.
+Le test ayant été consulté, il ne pourra pas servir à régler de nouveaux
+candidats ou seuils en conservant un statut d'évaluation indépendante.
+[Protocole, provenance DVC et rapports](qualification.md).
+
+Les paragraphes et tableaux suivants conservent les résultats historiques
+de l'étude à 10 %, distincts de ce candidat étendu.
 
 Les scores sont des sorties de ranking **non calibrées**, particulièrement avec
 pondération des classes ; le champ API `default_score` ne constitue pas une PD

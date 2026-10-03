@@ -1,0 +1,6 @@
+outs:
+- md5: eb07cf2d2a86587de728a146676fb31a.dir
+  size: 1368905
+  nfiles: 10
+  hash: md5
+  path: qualification_candidate

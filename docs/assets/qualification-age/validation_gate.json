@@ -1,0 +1,101 @@
+{
+  "passed": true,
+  "rules": {
+    "AGE_GROUP.disparate_impact": {
+      "actual": 0.8194291915222147,
+      "passed": true,
+      "requirement": 0.8
+    },
+    "AGE_GROUP.equal_opportunity_difference": {
+      "actual": 0.0946392024823397,
+      "passed": true,
+      "requirement": 0.1
+    },
+    "AGE_GROUP.support": {
+      "actual": [
+        "30-45",
+        "45-60",
+        "60+",
+        "<30"
+      ],
+      "passed": true,
+      "requirement": [
+        "<30",
+        "30-45",
+        "45-60",
+        "60+"
+      ]
+    },
+    "CODE_GENDER.disparate_impact": {
+      "actual": 0.9576449031737494,
+      "passed": true,
+      "requirement": 0.8
+    },
+    "CODE_GENDER.equal_opportunity_difference": {
+      "actual": 0.02396783670944802,
+      "passed": true,
+      "requirement": 0.1
+    },
+    "CODE_GENDER.support": {
+      "actual": [
+        "F",
+        "M"
+      ],
+      "passed": true,
+      "requirement": [
+        "F",
+        "M"
+      ]
+    },
+    "acceptance_bounds": {
+      "actual": 0.8055894308943089,
+      "passed": true,
+      "requirement": [
+        0.1,
+        0.95
+      ]
+    },
+    "auc_vs_production": {
+      "actual": null,
+      "passed": true,
+      "requirement": "first promotion: no production comparator"
+    },
+    "group_free_deterministic_inference": {
+      "actual": {
+        "randomized_decision": false,
+        "requires_sensitive_at_inference": false
+      },
+      "passed": true,
+      "requirement": "deterministic scoring without protected attributes at inference"
+    },
+    "minimum_auc": {
+      "actual": 0.7411290237248075,
+      "passed": true,
+      "requirement": 0.74
+    },
+    "minimum_recall": {
+      "actual": 0.5037783375314862,
+      "passed": true,
+      "requirement": 0.5
+    },
+    "shap_artifacts": {
+      "actual": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ],
+      "passed": true,
+      "requirement": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ]
+    }
+  }
+}

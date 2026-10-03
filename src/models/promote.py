@@ -115,6 +115,23 @@ def quality_gate(candidate: dict, prod: dict | None, cfg: dict) -> tuple[bool, d
         },
         "deterministic scoring without protected attributes at inference",
     )
+    if "independent_test_report" in candidate:
+        report = candidate["independent_test_report"]
+        test_evidence = {
+            key: value for key, value in candidate.items() if key != "independent_test_report"
+        }
+        test_evidence["metrics"] = {
+            key.replace("test_", "validation_", 1) if key.startswith("test_") else key: value
+            for key, value in report.get("metrics", {}).items()
+        }
+        test_evidence["fairness_report"] = report.get("fairness_report", {})
+        test_passed, test_rules = quality_gate(test_evidence, None, cfg)
+        rule(
+            "independent_test",
+            test_passed,
+            [key for key, value in test_rules.items() if not value["passed"]],
+            "same performance/fairness rules on the frozen independent test",
+        )
     return all(value["passed"] for value in rules.values()), rules
 
 
@@ -156,7 +173,7 @@ def candidate_evidence(bundle: dict, client: mlflow.MlflowClient) -> dict:
     if not x_hash or not y_hash:
         raise ValueError("Missing validation data provenance.")
     data_hash = f"{x_hash}:{y_hash}"
-    return {
+    evidence = {
         "run_id": run_id,
         "model_uri": bundle["model_uri"],
         "metrics": metrics,
@@ -167,6 +184,27 @@ def candidate_evidence(bundle: dict, client: mlflow.MlflowClient) -> dict:
         "training_data_sha256": parent.data.tags.get("training_data_sha256"),
         "raw_dvc_hash": parent.data.tags.get("raw_dvc_hash"),
     }
+    if "independent_test_status" in run.data.tags:
+        path = client.download_artifacts(run_id, "qualification/holdout_report.json")
+        report = json.loads(Path(path).read_text(encoding="utf-8"))
+        if (
+            report.get("run_id") != run_id
+            or report.get("evaluation_split") != "test"
+            or report.get("frozen_threshold") != bundle["threshold"]
+        ):
+            raise ValueError("Independent test identity differs from the frozen candidate.")
+        for key in ("test_auc", "test_recall", "test_acceptance_rate"):
+            actual = report.get("metrics", {}).get(key)
+            if not _number(actual) or actual != run.data.metrics.get(key):
+                raise ValueError(f"Independent test artifact and run metrics disagree: {key}")
+        hashes = report.get("data_sha256", {})
+        if any(
+            not isinstance(hashes.get(name), str) or len(hashes[name]) != 64
+            for name in ("X_test.csv", "y_test.csv", "sensitive_test.csv")
+        ):
+            raise ValueError("Missing independent test provenance.")
+        evidence["independent_test_report"] = report
+    return evidence
 
 
 def champion_version(client: mlflow.MlflowClient, name: str) -> Any:

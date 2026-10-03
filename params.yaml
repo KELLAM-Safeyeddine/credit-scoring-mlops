@@ -88,6 +88,7 @@ quality_gate:
   require_shap: true
 qualification:
   max_trials: 18
+  reweighing_scopes: [[CODE_GENDER, AGE_GROUP]]
   reweighing_powers: [1.0, 1.25, 1.5]
   configurations:
     - {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 5.0}

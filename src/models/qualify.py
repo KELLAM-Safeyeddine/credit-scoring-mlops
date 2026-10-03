@@ -40,7 +40,7 @@ def eligible(metrics: dict, fairness: dict, cfg: dict) -> bool:
     )
 
 
-def specifications(cfg: dict) -> list[tuple[dict, float, dict]]:
+def specifications(cfg: dict) -> list[tuple[dict, float, dict, tuple[str, ...]]]:
     """Reject excessive or unsafe search definitions before fitting anything."""
     settings = cfg["qualification"]
     limit = settings["max_trials"]
@@ -48,6 +48,12 @@ def specifications(cfg: dict) -> list[tuple[dict, float, dict]]:
         raise ValueError("Qualification search must be bounded to 1–30 trials.")
     allowed = {"n_estimators", "num_leaves", "learning_rate", "min_child_samples", "reg_lambda"}
     specs = []
+    scopes = settings.get("reweighing_scopes", [["CODE_GENDER", "AGE_GROUP"]])
+    if not scopes or any(
+        not isinstance(scope, list) or scope not in (["AGE_GROUP"], ["CODE_GENDER", "AGE_GROUP"])
+        for scope in scopes
+    ):
+        raise ValueError("Reweighing scopes must be age or gender/age audit attributes.")
     profiles = settings.get("proxy_profiles", [{"name": "unchanged", "columns": []}])
     if not profiles or any(
         set(profile) != {"name", "columns"}
@@ -68,10 +74,23 @@ def specifications(cfg: dict) -> list[tuple[dict, float, dict]]:
             ):
                 raise ValueError("Invalid reweighing power.")
             for profile in profiles:
-                specs.append((dict(parameters), float(power), copy.deepcopy(profile)))
+                for scope in scopes:
+                    specs.append(
+                        (dict(parameters), float(power), copy.deepcopy(profile), tuple(scope))
+                    )
     if not specs or len(specs) > limit:
         raise ValueError("Qualification trial count exceeds the configured bound.")
     return specs
+
+
+def training_weights(y: pd.Series, sensitive: pd.DataFrame, scope: tuple[str, ...]):
+    """Derive mitigation weights from the selected training audit groups only."""
+    if scope not in (("AGE_GROUP",), ("CODE_GENDER", "AGE_GROUP")):
+        raise ValueError("Unsupported reweighing scope.")
+    if sensitive.loc[:, list(scope)].isna().any().any():
+        raise ValueError("Reweighing audit groups must be non-null.")
+    groups = sensitive.AGE_GROUP if scope == ("AGE_GROUP",) else intersection_groups(sensitive)
+    return reweighing_weights(y, groups)
 
 
 def search(cfg: dict, output: Path) -> dict:
@@ -88,7 +107,7 @@ def search(cfg: dict, output: Path) -> dict:
     columns = json.loads((processed / "feature_columns.json").read_text())
     if list(xt) != columns or list(xv) != columns or EXCLUDED.intersection(columns):
         raise ValueError("Qualification must retain the frozen feature contract.")
-    if any(set(profile["columns"]) - set(columns) for _, _, profile in specs):
+    if any(set(profile["columns"]) - set(columns) for _, _, profile, _ in specs):
         raise ValueError("Unknown proxy profile columns.")
     if not yt.index.equals(xt.index) or not st.index.equals(xt.index):
         raise ValueError("Training audit alignment differs.")
@@ -96,7 +115,9 @@ def search(cfg: dict, output: Path) -> dict:
         raise ValueError("Validation audit alignment differs.")
     if not xt.index.is_unique or not xv.index.is_unique or len(xt.index.intersection(xv.index)):
         raise ValueError("Qualification train/validation must be disjoint.")
-    weights = reweighing_weights(yt, intersection_groups(st))
+    weights_by_scope = {
+        scope: training_weights(yt, st, scope) for scope in {item[3] for item in specs}
+    }
     provenance, lock = data_provenance(ROOT, processed)
     expansion_root = cfg["qualification"].get("snapshot_root")
     if expansion_root:
@@ -106,6 +127,11 @@ def search(cfg: dict, output: Path) -> dict:
         provenance["qualification_processed_dvc_hash"] = tracked["outs"][0]["md5"]
         provenance["dvc_lock_scope"] = "original pipeline; expanded data in processed.dvc artifact"
     output.mkdir(parents=True, exist_ok=False)
+    test_state = (
+        "previously_evaluated_not_read_by_search"
+        if (ROOT / "runtime/qualification-holdout.json").exists()
+        else "untouched"
+    )
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
     mlflow.set_experiment("credit-scoring-qualification")
     rows, best = [], None
@@ -113,7 +139,7 @@ def search(cfg: dict, output: Path) -> dict:
         f"{name}=={importlib.metadata.version(name)}"
         for name in ("lightgbm", "scikit-learn", "pandas", "numpy", "mlflow")
     ]
-    for number, (parameters, power, profile) in enumerate(specs, 1):
+    for number, (parameters, power, profile, scope) in enumerate(specs, 1):
         trial = copy.deepcopy(cfg)
         trial["train"]["lightgbm"].update(parameters)
         with mlflow.start_run(run_name=f"qualification-{output.name}-{number:02d}") as run:
@@ -121,7 +147,7 @@ def search(cfg: dict, output: Path) -> dict:
                 {
                     **provenance,
                     "selection_split": "validation",
-                    "test_split": "untouched",
+                    "test_split": test_state,
                     "sensitive_features": "audit_only; train reweighing",
                     "gate_status": "not_evaluated",
                 }
@@ -133,6 +159,7 @@ def search(cfg: dict, output: Path) -> dict:
                     "search_max_trials": len(specs),
                     "sample_frac": cfg["data"]["sample_frac"],
                     "proxy_profile": profile["name"],
+                    "reweighing_scope": "|".join(scope),
                 }
             )
             pipeline = build_pipeline("lightgbm", trial)
@@ -141,7 +168,7 @@ def search(cfg: dict, output: Path) -> dict:
                     [("proxy_mask", ProxyMask(tuple(profile["columns"]))), *pipeline.steps]
                 )
             start = time.perf_counter()
-            pipeline.fit(xt, yt, model__sample_weight=weights**power)
+            pipeline.fit(xt, yt, model__sample_weight=weights_by_scope[scope] ** power)
             duration = time.perf_counter() - start
             scores = pipeline.predict_proba(xv)[:, 1]
             threshold, feasible = select_fair_threshold(yv, scores, sv, trial)
@@ -175,6 +202,7 @@ def search(cfg: dict, output: Path) -> dict:
                 "parameters": parameters,
                 "power": power,
                 "proxy_profile": profile["name"],
+                "reweighing_scope": list(scope),
                 "threshold": threshold,
                 "validation_auc": metrics["validation_auc"],
                 "eligible": bool(usable),
@@ -208,18 +236,23 @@ def search(cfg: dict, output: Path) -> dict:
                 (output / "candidate.pkl").write_bytes(pickle.dumps(bundle))
                 write_json(
                     output / "selected_params.json",
-                    {"parameters": parameters, "power": power, "proxy_profile": profile},
+                    {
+                        "parameters": parameters,
+                        "power": power,
+                        "proxy_profile": profile,
+                        "reweighing_scope": list(scope),
+                    },
                 )
                 best = row
             rows.append(row)
             write_json(
-                output / "search.json", {"trials": rows, "best": best, "test_split": "untouched"}
+                output / "search.json", {"trials": rows, "best": best, "test_split": test_state}
             )
             print(json.dumps(row), flush=True)
     result = {
         "trials": rows,
         "best": best,
-        "test_split": "untouched",
+        "test_split": test_state,
         "status": "candidate_frozen_not_promoted" if best else "no_eligible_candidate",
         "output": str(output),
     }

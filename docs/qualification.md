@@ -211,3 +211,96 @@ Validation exécutée dans `creditS` : **111 tests réussis en 39,53 secondes**,
 27 avertissements de dépendances, Ruff sans erreur et 84 fichiers formatés.
 Les tests vérifient l'invariance des scores aux valeurs masquées, leur attribution
 SHAP nulle, la conservation du contrat et le rejet d'une entrée mal ordonnée.
+
+## Repondération ciblée et évaluation indépendante — 3 octobre 2026
+
+La campagne compare l'âge seul aux intersections genre/âge : deux configurations
+LightGBM, puissances 1,0 / 1,25 / 1,5, soit 12 essais. Le candidat âge seul,
+300 arbres et 15 feuilles, atteint AUC 0,74170, DI âge 0,81078 et EO âge 0,10366.
+Il échoue donc encore au seuil EO de 0,10. Deux essais supplémentaires utilisent
+une grille de 981 seuils globaux, de 0,01 à 0,99 par pas de 0,001 ; aucun ne passe.
+Trois puissances intermédiaires (1,6 / 1,625 / 1,65) sont ensuite examinées sur
+validation, avec cette grille fine. Ces raffinements sont adaptatifs et doivent
+être interprétés comme une sélection répétée sur validation, pas comme une
+preuve indépendante. **17 runs terminés au total**, sans modification des gates.
+
+Les poids sont calculés seulement sur train. Le mode âge seul n'utilise pas
+le genre pour calculer les poids, mais les audits et les gates exigent toujours
+les deux attributs. Les tests vérifient cette distinction. Le modèle ne reçoit
+aucun attribut sensible à l'inférence et conserve le contrat de 264 colonnes.
+
+Deux candidats franchissent les critères de validation. Celui ayant la meilleure
+AUC parmi les candidats admissibles est figé **avant toute lecture du test** :
+run `1cdba5300ddc4326aed25e76d99a36b9`, puissance 1,6 et seuil global **0,587**.
+Le candidat puissance 1,65 n'est pas évalué sur test après l'échec du premier.
+
+| Mesure | Validation 9 840 clients | Test indépendant 9 840 clients |
+|---|---:|---:|
+| AUC | 0,74113 | 0,74618 |
+| Recall défaut | 0,50378 | 0,53023 |
+| Acceptation | 0,80559 | 0,79970 |
+| DI genre | 0,95764 | 0,94729 |
+| Écart EO genre | 0,02397 | 0,00476 |
+| DI âge | 0,81943 | **0,79692 — rejet** |
+| Écart EO âge | 0,09464 | **0,25758 — rejet** |
+
+Les six artefacts SHAP réels sont générés et vérifiés : reconstruction des
+probabilités avec une erreur maximale de `9.992007221626409e-16`. Le summary
+plot a été inspecté visuellement. Le gate de validation passe, mais ce résultat
+ne se généralise pas à l'équité sur test : le TPR du refus va de 0,39583 pour
+60+ à 0,65341 pour <30. Le candidat est donc **rejeté**, version **3** du
+Registry local, `gate_failed_rules=["independent_test"]`, sans alias champion.
+Il n'est pas transféré au Registry Docker, dont les alias restent également vides.
+
+Le gate vérifie désormais le rapport indépendant lorsqu'il existe : identité
+du run, seuil figé, hashes des trois fichiers test, cohérence des métriques
+JSON/MLflow, puis recalcul des règles numériques. Un simple statut déclaré
+`passed` ne suffit pas. Une validation réussie ne peut pas promouvoir ce modèle
+malgré son échec indépendant. Les candidats historiques sans rapport indépendant
+conservent les règles précédentes ; aucune règle n'est assouplie.
+
+`runtime/qualification-holdout.json` réserve un seul candidat figé : changer
+le modèle, la configuration métier ou les données est refusé. Relancer le
+script pour la même identité réutilise le rapport en cache ; ce comportement
+a aussi été exécuté sur le vrai candidat, sans nouvelle évaluation du test.
+Ce registre local garantit le protocole du script, pas une protection de sécurité
+contre un utilisateur qui modifierait les fichiers. Le test a désormais été
+consulté : il ne faut plus s'en servir pour régler des candidats en prétendant
+obtenir une nouvelle validation indépendante. Un nouveau protocole avec des
+données encore non consultées doit précéder toute nouvelle qualification.
+
+Les résultats et paramètres sont conservés dans
+[la campagne initiale](assets/qualification-age/initial-search.json),
+[la grille fine](assets/qualification-age/refined-search.json),
+[les puissances intermédiaires](assets/qualification-age/interpolated-search.json),
+[le rapport indépendant](assets/qualification-age/holdout_report.json) et
+[la décision Registry](assets/qualification-age/promotion.json).
+
+Le bundle figé, ses paramètres, les gates et les six artefacts SHAP sont
+sauvegardés sous `qualification_candidate` dans le dépôt DVC isolé de
+l'expansion : hash **`eb07cf2d2a86587de728a146676fb31a.dir`**, 10 fichiers,
+1 368 905 octets. Onze fichiers ont été poussés au remote, manifeste compris.
+Le [descripteur](assets/qualification-age/qualification_candidate.dvc) permet
+de récupérer ce candidat rejeté sans versionner le pickle dans Git.
+
+Pour vérifier les tests et la décision existante :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m pytest -q
+python -m ruff check .
+python -m src.models.promote --params docs/assets/qualification-age/interpolated-params.yaml --candidate runtime/qualification/bc951ed132b4/candidate.pkl
+```
+
+La dernière commande réutilise la version rejetée de ce run ; elle n'ajoute
+aucun champion. Elle nécessite la base MLflow locale et le bundle de cette
+session. DVC restaure les fichiers du candidat, mais ne restaure pas la base
+MLflow. Les scripts de sélection ne lisent pas le test ; après son évaluation,
+ils marquent explicitement ce fait dans les tags et rapports des futures recherches.
+
+Validation finale dans `creditS` : **119 tests réussis en 56,19 secondes**,
+27 avertissements de dépendances, Ruff sans erreur et 86 fichiers Python formatés.
+Les tests couvrent le scope de repondération, les groupes manquants, la politique
+figée sans fit ni seuil choisi sur test, les splits disjoints, le cache immuable
+par identité et le rejet d'un échec indépendant malgré une bonne validation.
+La relance réelle du gate réutilise la version 3, sans créer une version 4.

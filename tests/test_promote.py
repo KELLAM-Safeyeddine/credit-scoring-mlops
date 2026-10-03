@@ -97,6 +97,31 @@ def test_gate_requires_comparable_production_auc(config):
     assert not passed and not rules["comparable_validation_data"]["passed"]
 
 
+@pytest.mark.parametrize("failure", ["auc", "age", "gender", "recall"])
+def test_independent_failure_blocks_promotion_despite_good_validation(config, failure):
+    candidate = valid_evidence(config)
+    report = {
+        "passed": True,  # Claimed status is not trusted; rules are recomputed.
+        "metrics": {
+            key.replace("validation_", "test_"): value
+            for key, value in candidate["metrics"].items()
+        },
+        "fairness_report": copy.deepcopy(candidate["fairness_report"]),
+    }
+    candidate["independent_test_report"] = report
+    assert quality_gate(candidate, None, config)[0]
+    if failure == "auc":
+        report["metrics"]["test_auc"] = 0.73
+    elif failure == "recall":
+        report["metrics"]["test_recall"] = 0.49
+    else:
+        attr = "AGE_GROUP" if failure == "age" else "CODE_GENDER"
+        report["fairness_report"]["attributes"][attr]["disparate_impact"] = 0.79
+    passed, rules = quality_gate(candidate, None, config)
+    assert not passed and not rules["independent_test"]["passed"]
+    assert all(value["passed"] for key, value in rules.items() if key != "independent_test")
+
+
 def test_changed_branch_cannot_mutate_registry(config):
     client = Mock()
     client.get_registered_model.return_value.aliases = {}

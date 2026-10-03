@@ -8,7 +8,36 @@ import pandas as pd
 import pytest
 from mlflow import MlflowClient
 
-from src.models.qualify import eligible, search, specifications
+from src.models.qualify import eligible, search, specifications, training_weights
+
+
+def test_age_weights_ignore_gender_but_intersection_weights_do_not():
+    y = pd.Series([0, 0, 0, 1, 0, 1, 1, 1])
+    sensitive = pd.DataFrame(
+        {
+            "AGE_GROUP": ["<30"] * 4 + ["60+"] * 4,
+            "CODE_GENDER": ["F", "F", "M", "M", "F", "F", "M", "M"],
+        }
+    )
+    original = training_weights(y, sensitive, ("AGE_GROUP",))
+    changed = sensitive.copy()
+    changed.CODE_GENDER = ["M", "M", "M", "F", "M", "F", "F", "F"]
+    np.testing.assert_allclose(original, training_weights(y, changed, ("AGE_GROUP",)))
+    assert not np.allclose(
+        training_weights(y, sensitive, ("CODE_GENDER", "AGE_GROUP")),
+        training_weights(y, changed, ("CODE_GENDER", "AGE_GROUP")),
+    )
+    assert original.mean() == pytest.approx(1)
+
+
+def test_reweighing_cannot_use_target_or_missing_audit_groups(config):
+    config["qualification"]["reweighing_scopes"] = [["TARGET"]]
+    with pytest.raises(ValueError, match="scopes"):
+        specifications(config)
+    with pytest.raises(ValueError, match="non-null"):
+        training_weights(
+            pd.Series([0, 1]), pd.DataFrame({"AGE_GROUP": ["<30", None]}), ("AGE_GROUP",)
+        )
 
 
 @pytest.mark.parametrize("change", ["budget", "parameter", "nonfinite_power"])
@@ -107,11 +136,13 @@ def test_expansion_provenance_survives_multiple_runs(config, tmp_path, monkeypat
             return np.column_stack([1 - scores, scores])
 
     monkeypatch.setattr("src.models.qualify.project_path", lambda *args: tmp_path)
+    monkeypatch.setattr("src.models.qualify.ROOT", tmp_path)
     monkeypatch.setattr("src.models.qualify.build_pipeline", lambda *args: FixturePipeline())
     monkeypatch.setattr("src.models.qualify.data_provenance", lambda *args: ({}, b"fixture lock"))
     monkeypatch.setattr("src.models.qualify.select_fair_threshold", lambda *args: (0.5, False))
     result = search(config, tmp_path / "output")
     assert result["status"] == "no_eligible_candidate"
+    assert result["test_split"] == "untouched"
     assert len(result["trials"]) == 2
     client = MlflowClient(config["mlflow"]["tracking_uri"])
     for trial in result["trials"]:
@@ -123,3 +154,8 @@ def test_expansion_provenance_survives_multiple_runs(config, tmp_path, monkeypat
             for item in client.list_artifacts(trial["run_id"], "provenance/expansion")
         }
         assert names == {"processed.dvc", "interim.dvc", "split_manifest.json"}
+    ledger = tmp_path / "runtime/qualification-holdout.json"
+    ledger.parent.mkdir()
+    ledger.write_text("{}")
+    later = search(config, tmp_path / "later-output")
+    assert later["test_split"] == "previously_evaluated_not_read_by_search"

@@ -9,10 +9,11 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 2 octobre 2026 : 96 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 119 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
-Le meilleur LightGBM échoue à l'équité par âge ; le candidat repondéré respecte
-les seuils d'équité étudiés mais son AUC 0,7311 est sous le minimum 0,74.
+Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
+mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
+écart d'égalité des chances 0,25758. Il est enregistré comme rejeté, sans promotion.
 Les résultats synthétiques ne qualifient pas un usage réel de crédit.
 
 ## Architecture
@@ -154,7 +155,9 @@ sensible. Un rejet enregistre la version et ses règles échouées, sans déplac
 
 ## Résultats Home Credit
 
-Validation uniquement, échantillon de développement ; test indépendant réservé.
+Résultats historiques sur validation, échantillon de développement à 10 %.
+Le candidat de la campagne étendue à 20 % a depuis été évalué une seule fois
+sur test ; [résultats et rejet](docs/qualification.md).
 Les seuils minimisent un coût configurable (défaut manqué : 10, faux refus : 1),
 avec contraintes supplémentaires lors de la mitigation.
 
@@ -233,6 +236,8 @@ Une campagne supplémentaire à 20 % des données conserve les réserves existan
 ses six essais ne fournissent pas davantage de champion qualifiable.
 Neuf essais de neutralisation de proxys ne franchissent pas non plus le gate ;
 les profils, résultats et limites sont consignés dans la même documentation.
+La repondération par âge franchit la validation, mais échoue sur le test indépendant.
+Le gate prend désormais cet échec en compte avant toute promotion de ce candidat.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les dernières validations.
