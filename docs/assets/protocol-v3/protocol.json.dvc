@@ -1,0 +1,5 @@
+outs:
+- md5: 03e88844c2416f39306410ff4346b77c
+  size: 5825
+  hash: md5
+  path: protocol.json

@@ -1,8 +1,10 @@
 """Freeze disjoint prospective memberships before any model is trained."""
 
+import argparse
 import copy
 import hashlib
 import json
+from pathlib import Path
 
 import pandas as pd
 import yaml
@@ -11,6 +13,21 @@ from sklearn.model_selection import train_test_split
 from src.config import ROOT, load_config, write_json
 
 SPLITS = ("train", "val", "test", "production")
+
+
+def predeclared_plan(settings: dict) -> dict | None:
+    """Check an optional bounded selection plan before any outputs are written."""
+    plan = settings.get("qualification_plan")
+    if plan is not None and (
+        not isinstance(plan, dict)
+        or not isinstance(plan.get("max_trials"), int)
+        or isinstance(plan["max_trials"], bool)
+        or not 1 <= plan["max_trials"] <= 4
+        or not isinstance(plan.get("selection_rule"), str)
+        or not plan["selection_rule"]
+    ):
+        raise ValueError("Invalid predeclared qualification plan.")
+    return copy.deepcopy(plan)
 
 
 def prospective_memberships(source: pd.DataFrame, used: set[int], cfg: dict) -> dict:
@@ -53,11 +70,11 @@ def prospective_memberships(source: pd.DataFrame, used: set[int], cfg: dict) -> 
     }
 
 
-def main() -> None:
+def freeze_protocol(cfg: dict) -> dict:
     """Write ID-only allocations and fixed rules; refuse to overwrite an existing protocol."""
-    cfg = load_config()
     settings = cfg["independent_protocol"]
     output = ROOT / settings["directory"]
+    plan = predeclared_plan(settings)
     if output.exists():
         raise ValueError(
             "Protocol directory already exists; frozen memberships cannot be replaced."
@@ -105,6 +122,13 @@ def main() -> None:
         "snapshot_root": settings["directory"],
         "selection_rule": "max_validation_auc; ties: higher_recall_then_trial_order",
     }
+    if plan is not None:
+        prospective_cfg["qualification"] = {
+            **copy.deepcopy(plan),
+            "protocol_manifest": f"{settings['directory']}/protocol.json",
+            "snapshot_root": settings["directory"],
+            "require_independent_test": True,
+        }
     prospective_cfg["train"]["threshold"]["steps"] = 981
     (output / "params.yaml").write_text(
         yaml.safe_dump(prospective_cfg, sort_keys=False), encoding="utf-8"
@@ -123,7 +147,8 @@ def main() -> None:
         "source_fraction": settings["source_fraction"],
         "random_state": settings["random_state"],
         "overlap_with_historical": 0,
-        "selection_budget": 6,
+        "selection_budget": prospective_cfg["qualification"]["max_trials"],
+        "selection_plan": copy.deepcopy(prospective_cfg["qualification"]),
         "test_evaluations_permitted": 1,
         "adaptive_trials_permitted": False,
         "labels_used_for": "stratified allocation only; exported membership CSVs contain no TARGET",
@@ -142,6 +167,15 @@ def main() -> None:
         ),
     }
     write_json(output / "protocol.json", manifest)
+    return manifest
+
+
+def main() -> None:
+    """Freeze the requested configuration without training or evaluating models."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--params", type=Path)
+    args = parser.parse_args()
+    manifest = freeze_protocol(load_config(args.params))
     print(
         json.dumps(
             {
