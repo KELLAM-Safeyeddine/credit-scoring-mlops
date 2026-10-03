@@ -1,9 +1,0 @@
-{
-  "abandoned_import_run_id": "c1987fe40e8e4a29930466e1f6dd44cb",
-  "cause": "Windows cp1252 output incompatible with MLflow emoji",
-  "correction": "CLI stdout configured UTF-8",
-  "final_status": "FAILED",
-  "new_training_performed": false,
-  "successful_import_run_id": "ebedf3ecbea948e482e0547193c0db3e",
-  "test_reevaluated": false
-}

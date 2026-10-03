@@ -1,5 +1,0 @@
-outs:
-- md5: 3e222eb9020a6bd1c3b91dd6e723381c
-  size: 8695
-  hash: md5
-  path: holdout_ledger.json
