@@ -137,6 +137,7 @@ def test_expansion_provenance_survives_multiple_runs(config, tmp_path, monkeypat
 
     monkeypatch.setattr("src.models.qualify.project_path", lambda *args: tmp_path)
     monkeypatch.setattr("src.models.qualify.ROOT", tmp_path)
+    monkeypatch.setattr("src.models.qualification_protocol.ROOT", tmp_path)
     monkeypatch.setattr("src.models.qualify.build_pipeline", lambda *args: FixturePipeline())
     monkeypatch.setattr("src.models.qualify.data_provenance", lambda *args: ({}, b"fixture lock"))
     monkeypatch.setattr("src.models.qualify.select_fair_threshold", lambda *args: (0.5, False))

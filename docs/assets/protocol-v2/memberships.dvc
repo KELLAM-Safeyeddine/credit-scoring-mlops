@@ -1,0 +1,6 @@
+outs:
+- md5: 6e2530393a6960d3771bd4d72be7d06c.dir
+  size: 645815
+  nfiles: 4
+  hash: md5
+  path: memberships

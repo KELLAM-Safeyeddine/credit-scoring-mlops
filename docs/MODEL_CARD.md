@@ -94,6 +94,9 @@ recalcule les règles et refuse ce candidat même si la validation est réussie.
 Le test ayant été consulté, il ne pourra pas servir à régler de nouveaux
 candidats ou seuils en conservant un statut d'évaluation indépendante.
 [Protocole, provenance DVC et rapports](qualification.md).
+Un [nouveau protocole prospectif](protocol-v2.md) exclut tous les clients de
+ces campagnes et fige les nouvelles affectations avant entraînement. Il est
+préparé, sans nouveau résultat prédictif ni champion qualifié.
 
 Les paragraphes et tableaux suivants conservent les résultats historiques
 de l'étude à 10 %, distincts de ce candidat étendu.

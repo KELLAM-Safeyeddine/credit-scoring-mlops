@@ -97,6 +97,12 @@ qualification:
     - {n_estimators: 500, num_leaves: 31, learning_rate: 0.03, min_child_samples: 150, reg_lambda: 15.0}
     - {n_estimators: 300, num_leaves: 7, learning_rate: 0.05, min_child_samples: 80, reg_lambda: 5.0}
     - {n_estimators: 500, num_leaves: 7, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 10.0}
+independent_protocol:
+  id: home-credit-independent-v2
+  directory: runtime/protocol-v2
+  source_fraction: 0.3
+  random_state: 20261003
+  used_membership_roots: [data/interim, runtime/qualification-expanded-20/interim]
 mlflow:
   experiment_name: credit-scoring
   registered_model_name: credit-scoring

@@ -25,6 +25,7 @@ from src.models.experiments import build_pipeline, data_provenance
 from src.models.fairness import audit_fairness, intersection_groups, reweighing_weights
 from src.models.mitigate import select_fair_threshold
 from src.models.policies import ScoringPolicy
+from src.models.qualification_protocol import protocol_context, verify_memberships
 
 
 def eligible(metrics: dict, fairness: dict, cfg: dict) -> bool:
@@ -96,6 +97,7 @@ def training_weights(y: pd.Series, sensitive: pd.DataFrame, scope: tuple[str, ..
 def search(cfg: dict, output: Path) -> dict:
     """Track bounded candidates and freeze the best eligible validation policy."""
     specs = specifications(cfg)
+    holdout_ledger, protocol = protocol_context(cfg)
     processed = project_path(cfg, "processed")
     frames = {
         name: pd.read_csv(processed / f"{name}.csv", index_col="SK_ID_CURR")
@@ -115,6 +117,8 @@ def search(cfg: dict, output: Path) -> dict:
         raise ValueError("Validation audit alignment differs.")
     if not xt.index.is_unique or not xv.index.is_unique or len(xt.index.intersection(xv.index)):
         raise ValueError("Qualification train/validation must be disjoint.")
+    if protocol:
+        verify_memberships(cfg, protocol, {"train": xt, "val": xv})
     weights_by_scope = {
         scope: training_weights(yt, st, scope) for scope in {item[3] for item in specs}
     }
@@ -128,9 +132,7 @@ def search(cfg: dict, output: Path) -> dict:
         provenance["dvc_lock_scope"] = "original pipeline; expanded data in processed.dvc artifact"
     output.mkdir(parents=True, exist_ok=False)
     test_state = (
-        "previously_evaluated_not_read_by_search"
-        if (ROOT / "runtime/qualification-holdout.json").exists()
-        else "untouched"
+        "previously_evaluated_not_read_by_search" if holdout_ledger.exists() else "untouched"
     )
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
     mlflow.set_experiment("credit-scoring-qualification")
@@ -152,6 +154,9 @@ def search(cfg: dict, output: Path) -> dict:
                     "gate_status": "not_evaluated",
                 }
             )
+            if protocol:
+                mlflow.set_tag("prospective_protocol_id", protocol["protocol_id"])
+                mlflow.log_dict(protocol, "provenance/protocol.json")
             mlflow.log_params(
                 {
                     **trial["train"]["lightgbm"],
@@ -214,7 +219,11 @@ def search(cfg: dict, output: Path) -> dict:
                 "validation_recall": metrics["validation_recall"],
                 "validation_acceptance_rate": metrics["validation_acceptance_rate"],
             }
-            if usable and (best is None or row["validation_auc"] > best["validation_auc"]):
+            if usable and (
+                best is None
+                or (row["validation_auc"], row["validation_recall"])
+                > (best["validation_auc"], best["validation_recall"])
+            ):
                 logged = mlflow.sklearn.log_model(
                     pipeline,
                     name="model",

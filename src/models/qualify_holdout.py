@@ -11,11 +11,12 @@ from pathlib import Path
 import mlflow
 import pandas as pd
 
-from src.config import ROOT, load_config, project_path, write_json
+from src.config import load_config, project_path, write_json
 from src.models.evaluate import performance_metrics
 from src.models.explain import create_shap_artifacts
 from src.models.fairness import audit_fairness
 from src.models.promote import candidate_evidence, quality_gate
+from src.models.qualification_protocol import protocol_context, verify_memberships
 
 
 def reserve_holdout(ledger: Path, identity: dict) -> dict | None:
@@ -40,6 +41,9 @@ def evaluate_holdout(bundle: dict, cfg: dict, evidence: dict, processed: Path) -
         raise ValueError("Holdout feature contract differs.")
     if not x.index.equals(y.index) or not x.index.equals(sensitive.index):
         raise ValueError("Holdout labels/audit attributes must align.")
+    _, protocol = protocol_context(cfg)
+    if protocol:
+        verify_memberships(cfg, protocol, {"test": x})
     for split in ("train", "val"):
         ids = pd.read_csv(processed / f"X_{split}.csv", usecols=["SK_ID_CURR"]).SK_ID_CURR
         if set(ids).intersection(x.index):
@@ -77,6 +81,7 @@ def main() -> None:
     parser.add_argument("--candidate", type=Path, required=True)
     args = parser.parse_args()
     cfg = load_config(args.params)
+    ledger, _ = protocol_context(cfg)
     content = args.candidate.read_bytes()
     bundle = pickle.loads(content)  # Trusted locally generated bundle only.
     processed = project_path(cfg, "processed")
@@ -113,7 +118,6 @@ def main() -> None:
             for name in ("X_test.csv", "y_test.csv", "sensitive_test.csv")
         },
     }
-    ledger = ROOT / "runtime/qualification-holdout.json"
     report = reserve_holdout(ledger, identity)
     if report is None:
         report = evaluate_holdout(bundle, cfg, evidence, processed)

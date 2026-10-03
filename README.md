@@ -9,7 +9,7 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 119 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 122 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
@@ -238,6 +238,8 @@ Neuf essais de neutralisation de proxys ne franchissent pas non plus le gate ;
 les profils, résultats et limites sont consignés dans la même documentation.
 La repondération par âge franchit la validation, mais échoue sur le test indépendant.
 Le gate prend désormais cet échec en compte avant toute promotion de ce candidat.
+[Nouveau protocole prospectif](docs/protocol-v2.md) : affectations figées sur
+92 253 autres clients, six essais préspécifiés ; entraînement encore à lancer.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
 décrivent les dernières validations.
