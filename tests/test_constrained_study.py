@@ -172,3 +172,20 @@ def test_selection_excludes_diagnostics_and_uses_stable_ties():
     rows.append(row("same-recall-later", 0.75, 0.8))
     assert selected_candidate(rows)["fit"] == "better-recall"
     assert selected_candidate([rows[0]]) is None
+
+
+def test_separate_development_plan_preserves_parent_and_selection_margins():
+    import copy
+    from pathlib import Path
+
+    cfg = load_config(Path("configs/protocol-v3.yaml"))
+    parent = copy.deepcopy(cfg)
+    settings = load_config()["constrained_refinement_development"]
+    selected = selection_config(cfg, settings)
+    assert cfg == parent
+    assert selected["quality_gate"]["min_auc"] == 0.745
+    assert selected["fairness"]["min_disparate_impact"] == 0.85
+    assert selected["fairness"]["max_equal_opp_diff"] == 0.075
+    settings["development_only"] = False
+    with pytest.raises(ValueError, match="frozen selection plan"):
+        selection_config(cfg, settings)

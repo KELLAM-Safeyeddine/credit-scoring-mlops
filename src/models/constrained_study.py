@@ -134,7 +134,7 @@ def selection_config(cfg: dict, settings: dict) -> dict:
     margins = settings.get("validation_selection_margin")
     if margins is None:
         return selected
-    if settings != cfg["qualification"]:
+    if settings != cfg["qualification"] and settings.get("development_only") is not True:
         raise ValueError("Prospective study differs from the frozen selection plan.")
     if (
         settings["selection_score_mode"] != "probability_average"
@@ -275,6 +275,7 @@ def run_study(
         "test_evaluated": False,
         "promotion_allowed": False,
         "source_protocol": manifest["protocol_id"],
+        "source_validation_reused": settings.get("development_only") is True,
         "rows": [],
     }
     for trial in trials:
@@ -431,7 +432,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--study",
-        choices=["constrained_development", "constrained_capacity_development"],
+        choices=[
+            "constrained_development",
+            "constrained_capacity_development",
+            "constrained_refinement_development",
+        ],
         default="constrained_development",
     )
     parser.add_argument("--protocol", type=Path)

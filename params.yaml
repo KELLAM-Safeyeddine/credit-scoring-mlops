@@ -120,6 +120,26 @@ constrained_capacity_development:
       scope: intersection
       max_iter: 12
       lightgbm: {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 5.0, n_jobs: 4}
+constrained_refinement_development:
+  source_params: runtime/protocol-v3/params.yaml
+  output: runtime/v3-refinement-development
+  development_only: true
+  max_trials: 2
+  eps: 0.005
+  difference_bound: 0.01
+  selection_score_mode: probability_average
+  validation_selection_margin: {min_auc: 0.745, min_disparate_impact: 0.85, max_equal_opp_diff: 0.075}
+  trials:
+    - name: eo-intersection-300-leaves15
+      constraint: EqualizedOdds
+      scope: intersection
+      max_iter: 20
+      lightgbm: {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 10.0, n_jobs: 4}
+    - name: eo-intersection-500-leaves15
+      constraint: EqualizedOdds
+      scope: intersection
+      max_iter: 20
+      lightgbm: {n_estimators: 500, num_leaves: 15, learning_rate: 0.03, min_child_samples: 120, reg_lambda: 15.0, n_jobs: 4}
 ensemble_qualification:
   source_params: runtime/protocol-v2/params.yaml
   snapshot: runtime/constrained-capacity-development/equalized-odds-intersection-300-leaves7-probability_average.pkl

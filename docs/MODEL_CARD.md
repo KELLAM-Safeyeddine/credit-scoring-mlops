@@ -342,6 +342,17 @@ de production passent, mais la marge de sélection préspécifiée AUC ≥ 0,745
 identique est documentée après un dépassement numérique des bornes de score.
 Le test v2 évalué demeure exclu de la sélection ; aucun champion n'est promu.
 
+Une [étude de développement séparée](v3-refinement-development.md) réutilise
+ensuite le train et la validation v3, sans prolonger sa campagne prospective.
+Deux fits à quinze feuilles sont préspécifiés ; le score moyen à 500 arbres
+atteint AUC 0,75151, DI âge 0,85203, EO âge 0,06507, DI genre 0,99549 et
+EO genre 0,02750. Il passe les marges de développement inchangées et son
+rechargement reproduit les audits sur toute la validation. Cette validation
+réutilisée ne constitue pas une qualification indépendante : les preuves SHAP
+et le gel d'un plan d'évaluation doivent précéder l'ouverture du test v3 intact.
+Le score reste non calibré, le best_gap dépasse la précision demandée et la
+robustesse du DI proche de la marge reste à démontrer. Aucun champion promu.
+
 Définir la population cible, le responsable, une revue humaine effective et un
 recours compréhensible ; valider les droits d'usage et la minimisation des données.
 Obtenir un modèle passant le gate sans l'assouplir ; évaluer sur un test intact

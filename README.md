@@ -9,7 +9,7 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 153 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 154 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
@@ -19,7 +19,7 @@ Les résultats synthétiques ne qualifient pas un usage réel de crédit.
 [Bilan de livraison et vérifications finales](docs/final-validation.md) :
 démonstration complète rejouée, services vérifiés et limite de qualification
 Home Credit explicitement conservée.
-Dernier contrôle : **153 tests**, images reconstruites, scénario Airflow
+Contrôle de livraison précédent : **153 tests**, images reconstruites, scénario Airflow
 `cb451a6031e6` réussi et API rechargée sur v3 synthétique. La qualification
 Home Credit reste non obtenue ; l'API principale conserve `/health` à 503.
 
@@ -40,6 +40,13 @@ Le [protocole v3 sur des clients inutilisés](docs/protocol-v3.md) est exécuté
 deux configurations Fairlearn, trois tentatives dont une reprise numérique.
 Les AUC 0,74105 et 0,74073 passent le minimum de production 0,74 mais restent
 sous la marge de sélection préspécifiée 0,745. Aucun candidat retenu, test fermé.
+
+Une [étude de développement séparée à quinze feuilles](docs/v3-refinement-development.md)
+réutilise uniquement le train et la validation v3. Sur ses deux fits préspécifiés,
+le modèle à 500 arbres passe les marges de sélection : AUC 0,75151, DI âge
+0,85203 et écart EO âge 0,06507. Son instantané est vérifié après rechargement ;
+**154 tests passent**. Il reste un candidat de développement : SHAP et qualification
+indépendante sont encore nécessaires, test v3 intact et aucun champion promu.
 
 ## Architecture
 
