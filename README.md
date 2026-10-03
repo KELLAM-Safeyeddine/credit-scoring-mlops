@@ -16,6 +16,10 @@ mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0
 écart d'égalité des chances 0,25758. Il est enregistré comme rejeté, sans promotion.
 Les résultats synthétiques ne qualifient pas un usage réel de crédit.
 
+[Bilan de livraison et vérifications finales](docs/final-validation.md) :
+démonstration complète rejouée, services vérifiés et limite de qualification
+Home Credit explicitement conservée.
+
 Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
 quatre entraînements contraints et huit scores déterministes sur le développement.
 Le point respectant l'équité atteint une AUC de 0,73665, sous le minimum de 0,74.
@@ -248,4 +252,5 @@ Le gate prend désormais cet échec en compte avant toute promotion de ce candid
 sur validation ; le nouveau test reste fermé, sans ajout adaptatif ni promotion.
 Les preuves historiques sont dans `docs/phase*-validation.md` ;
 [phase 11](docs/phase11-validation.md) et [phase 12](docs/phase12-validation.md)
-décrivent les dernières validations.
+décrivent les validations de ces phases ; le [bilan final](docs/final-validation.md)
+consigne la vérification de livraison.

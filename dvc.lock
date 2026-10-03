@@ -72,12 +72,12 @@ stages:
       size: 3083
     - path: src/features/aggregations.py
       hash: md5
-      md5: 98609fbb2f4ede9f15665b9f80d70063
-      size: 7832
+      md5: 78d5381104e0e8c507017ee77ce2a4ef
+      size: 7952
     - path: src/features/build_features.py
       hash: md5
-      md5: b146afed21f04dab8c56d56f49474228
-      size: 5219
+      md5: 3981008859dd6cab5f5a0c7906a656d0
+      size: 5422
     - path: src/features/contracts.py
       hash: md5
       md5: f8f0e5de4d8908eb8147740728d6e4fb
@@ -130,12 +130,12 @@ stages:
       size: 3083
     - path: src/features/aggregations.py
       hash: md5
-      md5: 98609fbb2f4ede9f15665b9f80d70063
-      size: 7832
+      md5: 78d5381104e0e8c507017ee77ce2a4ef
+      size: 7952
     - path: src/features/build_features.py
       hash: md5
-      md5: b146afed21f04dab8c56d56f49474228
-      size: 5219
+      md5: 3981008859dd6cab5f5a0c7906a656d0
+      size: 5422
     - path: src/features/contracts.py
       hash: md5
       md5: f8f0e5de4d8908eb8147740728d6e4fb
@@ -150,8 +150,8 @@ stages:
       size: 1912
     - path: src/models/experiments.py
       hash: md5
-      md5: bb41d6caad29cafb1f6bf10a62717050
-      size: 9573
+      md5: cd59d2c16445ba0ce3af0eb12b4bf564
+      size: 9860
     - path: src/models/train.py
       hash: md5
       md5: 937ab8339a8602798ecaafaa3c6d78fd
@@ -203,27 +203,27 @@ stages:
     outs:
     - path: models
       hash: md5
-      md5: 14968d2f03d26e4eacf9945cb1e4fefb.dir
+      md5: 9c57ce76a5e119273b103e7afb6cb98d.dir
       size: 11320570
       nfiles: 5
     - path: reports/baseline_metrics.json
       hash: md5
-      md5: 20f6985643e87fd65966364212c192b8
+      md5: e5cb36a7fd306edc18ee1760cfc5f25f
       size: 1446
     - path: reports/model_comparison.csv
       hash: md5
-      md5: fc9ce225c8ff99d9647dca88b8a70666
+      md5: abe0b2bfb6a08d0f066b16e8f9ce9608
       size: 1397
     - path: reports/model_comparison.json
       hash: md5
-      md5: d87253d163859486c8279d0d1972f0d0
+      md5: 75249cb54ba0c7ce9be7bfdba8af5bc6
       size: 4072
   simulate_production:
     cmd: '"creditS/Scripts/python.exe" -m src.data.simulate_production'
     deps:
     - path: artifacts/fairness_models/candidate.pkl
       hash: md5
-      md5: 5fdf144e1120c752f153336e9314bf84
+      md5: f76ac5bf66601f8afab5165de67d3ad7
       size: 296643
     - path: data/processed
       hash: md5
@@ -278,7 +278,7 @@ stages:
     outs:
     - path: data/production
       hash: md5
-      md5: 0c91131ddcd7c03d75a21d7452ba16c7.dir
+      md5: 22c43fb57320fc3bb4a976b578a34f39.dir
       size: 7498711
       nfiles: 33
   fairness:
@@ -291,7 +291,7 @@ stages:
       nfiles: 16
     - path: models/baseline.pkl
       hash: md5
-      md5: 35d6a29fd6801964500c439733b30ccc
+      md5: c21e32377ae1bf8013aa441833eaf949
       size: 288964
     - path: src/config.py
       hash: md5
@@ -303,8 +303,8 @@ stages:
       size: 1912
     - path: src/models/experiments.py
       hash: md5
-      md5: bb41d6caad29cafb1f6bf10a62717050
-      size: 9573
+      md5: cd59d2c16445ba0ce3af0eb12b4bf564
+      size: 9860
     - path: src/models/fairness.py
       hash: md5
       md5: 5475eb9a4a64e4995095b4288009a194
@@ -414,20 +414,20 @@ stages:
     outs:
     - path: artifacts/fairness_models
       hash: md5
-      md5: 53b2c3cc9d60acbaf8ad014be1a8ea4b.dir
+      md5: 56ee8c1cc04fd70c9c55d3c5d97d78c3.dir
       size: 43088563
       nfiles: 9
     - path: reports/fairness
       hash: md5
-      md5: 8f85d118c8c678357ce77f83544a6272.dir
-      size: 116999
+      md5: e9635c7770beb41904c61f803b1380f5.dir
+      size: 117001
       nfiles: 5
   explain:
     cmd: '"creditS/Scripts/python.exe" -m src.models.explain'
     deps:
     - path: artifacts/fairness_models
       hash: md5
-      md5: 53b2c3cc9d60acbaf8ad014be1a8ea4b.dir
+      md5: 56ee8c1cc04fd70c9c55d3c5d97d78c3.dir
       size: 43088563
       nfiles: 9
     - path: data/processed/X_val.csv
@@ -466,6 +466,6 @@ stages:
     outs:
     - path: reports/shap
       hash: md5
-      md5: 879132012c8574575688b0d763668963.dir
-      size: 1470857
+      md5: e4b1d7b46e9171678c3f51330d5051d1.dir
+      size: 1469216
       nfiles: 12
