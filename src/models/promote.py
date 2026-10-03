@@ -1,6 +1,7 @@
 """Fail-closed quality gate and explicit MLflow alias promotion."""
 
 import argparse
+import copy
 import json
 import math
 import pickle
@@ -120,17 +121,29 @@ def quality_gate(candidate: dict, prod: dict | None, cfg: dict) -> tuple[bool, d
         test_evidence = {
             key: value for key, value in candidate.items() if key != "independent_test_report"
         }
+        test_evidence.pop("independent_test_required", None)
         test_evidence["metrics"] = {
             key.replace("test_", "validation_", 1) if key.startswith("test_") else key: value
             for key, value in report.get("metrics", {}).items()
         }
         test_evidence["fairness_report"] = report.get("fairness_report", {})
-        test_passed, test_rules = quality_gate(test_evidence, None, cfg)
+        diagnostic_cfg = copy.deepcopy(cfg)
+        diagnostic_cfg.setdefault("qualification", {})["require_independent_test"] = False
+        test_passed, test_rules = quality_gate(test_evidence, None, diagnostic_cfg)
         rule(
             "independent_test",
             test_passed,
             [key for key, value in test_rules.items() if not value["passed"]],
             "same performance/fairness rules on the frozen independent test",
+        )
+    elif candidate.get("independent_test_required") or cfg.get("qualification", {}).get(
+        "require_independent_test"
+    ):
+        rule(
+            "independent_test",
+            False,
+            "not_evaluated",
+            "frozen independent test must pass before promotion",
         )
     return all(value["passed"] for value in rules.values()), rules
 
@@ -184,6 +197,8 @@ def candidate_evidence(bundle: dict, client: mlflow.MlflowClient) -> dict:
         "training_data_sha256": parent.data.tags.get("training_data_sha256"),
         "raw_dvc_hash": parent.data.tags.get("raw_dvc_hash"),
     }
+    if bundle.get("independent_test_required"):
+        evidence["independent_test_required"] = True
     if "independent_test_status" in run.data.tags:
         path = client.download_artifacts(run_id, "qualification/holdout_report.json")
         report = json.loads(Path(path).read_text(encoding="utf-8"))

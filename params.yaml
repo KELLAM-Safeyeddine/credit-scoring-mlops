@@ -120,6 +120,14 @@ constrained_capacity_development:
       scope: intersection
       max_iter: 12
       lightgbm: {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 5.0, n_jobs: 4}
+ensemble_qualification:
+  source_params: runtime/protocol-v2/params.yaml
+  snapshot: runtime/constrained-capacity-development/equalized-odds-intersection-300-leaves7-probability_average.pkl
+  snapshot_sha256: d93e7be08ab2a6b179b4cf32ae5b8e9434a1365e7685771c5892c7f49a6194bc
+  output: runtime/ensemble-qualification
+  plan_id: home-credit-ensemble-evaluation-v1
+  background_rows: 50
+  shap_rows: 400
 independent_protocol:
   id: home-credit-independent-v2
   directory: runtime/protocol-v2

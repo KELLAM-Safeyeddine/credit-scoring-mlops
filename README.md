@@ -245,6 +245,8 @@ de production dans un dataset d'entraînement n'est pas implémentée.
 
 [Architecture](docs/architecture.md), [Docker](docs/docker.md),
 [Airflow](docs/airflow.md), [Model Card](docs/MODEL_CARD.md).
+[Ensemble figé : SHAP et qualification](docs/ensemble-qualification.md) : preuves
+SHAP exécutées, plan figé, promotion bloquée jusqu'au test indépendant v2.
 [Recherche complémentaire de qualification](docs/qualification.md) : 18 essais,
 aucun candidat franchissant simultanément les seuils d'AUC et d'équité.
 Une campagne supplémentaire à 20 % des données conserve les réserves existantes ;

@@ -1,0 +1,11 @@
+{
+  "background_rows": 50,
+  "model_uri": "models:/m-e8184ab9a9604145a343c9d015a0c770",
+  "promotion_gate_passed": false,
+  "run_id": "ab7cbd43f1ac4cf58cc7715e1733ab80",
+  "shap_reconstruction_error": 3.5783342955397757e-09,
+  "shap_rows": 400,
+  "shared_holdout_ledger": "runtime/qualification-holdouts/home-credit-independent-v2.json",
+  "test_evaluated": false,
+  "validation_shap_gate_passed": true
+}

@@ -14,6 +14,7 @@ import shap
 
 from src.config import load_config, parse_params, project_path, write_json
 from src.features.contracts import EXCLUDED
+from src.models.probability_mixture import ProbabilityMixture
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt  # noqa: E402
@@ -89,13 +90,48 @@ class CreditExplainer:
         self.columns = bundle["columns"]
         if EXCLUDED.intersection(self.columns):
             raise ValueError("Audit attributes cannot enter explanations as model features.")
-        self.explainer = shap.TreeExplainer(self.pipeline[-1], model_output="raw")
+        model = self.pipeline[-1]
+        self.is_mixture = isinstance(model, ProbabilityMixture)
+        if self.is_mixture:
+            self.components = [
+                shap.TreeExplainer(
+                    oracle,
+                    data=model.background,
+                    model_output="probability",
+                    feature_perturbation="interventional",
+                )
+                for oracle in model.predictors
+            ]
+        else:
+            self.explainer = shap.TreeExplainer(model, model_output="raw")
 
     def explain(self, x: pd.DataFrame) -> shap.Explanation:
         """Return class-one SHAP values for the exact transformed observations."""
         if list(x.columns) != self.columns:
             raise ValueError("SHAP input must match the ordered training columns.")
         transformed = self.pipeline[:-1].transform(x)
+        if self.is_mixture:
+            model = self.pipeline[-1]
+            values = np.zeros_like(transformed, dtype=float)
+            base = np.zeros(len(x))
+            for component, weight in zip(self.components, model.weights, strict=True):
+                result = component(transformed, check_additivity=True)
+                contribution, origin = np.asarray(result.values), np.asarray(result.base_values)
+                if contribution.ndim == 3:
+                    contribution, origin = contribution[:, :, 1], origin[:, 1]
+                values += weight * contribution
+                base += weight * origin
+            values /= sum(model.weights)
+            base /= sum(model.weights)
+            np.testing.assert_allclose(
+                base + values.sum(axis=1),
+                model.predict_proba(transformed)[:, 1],
+                atol=1e-6,
+                rtol=1e-6,
+            )
+            return shap.Explanation(
+                values=values, base_values=base, data=transformed, feature_names=self.columns
+            )
         result = self.explainer(transformed, check_additivity=True)
         values, base = np.asarray(result.values), np.asarray(result.base_values)
         if values.ndim == 3:
@@ -195,7 +231,12 @@ def create_shap_artifacts(
         recovered = 1 / (1 + np.exp(-reconstructed))
         units = "raw log-odds of predicted default; positive increases default score"
     else:
-        recovered, units = reconstructed, "class-one tree output"
+        recovered = reconstructed
+        units = (
+            "weighted class-one probability output; uncalibrated ranking score"
+            if explainer.is_mixture
+            else "class-one tree output"
+        )
     np.testing.assert_allclose(recovered, predicted, atol=1e-6, rtol=1e-6)
     report = {
         "shap_version": shap.__version__,

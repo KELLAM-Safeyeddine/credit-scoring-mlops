@@ -47,6 +47,24 @@ def test_gate_accepts_all_rules_and_exact_boundaries(config):
     assert passed and all(rule["passed"] for rule in rules.values())
 
 
+def test_required_independent_test_blocks_premature_promotion(config):
+    candidate = valid_evidence(config)
+    candidate["independent_test_required"] = True
+    passed, rules = quality_gate(candidate, None, config)
+    assert not passed and rules["independent_test"]["actual"] == "not_evaluated"
+    candidate["independent_test_report"] = {
+        "metrics": {
+            key.replace("validation_", "test_"): value
+            for key, value in candidate["metrics"].items()
+        },
+        "fairness_report": candidate["fairness_report"],
+    }
+    config["qualification"]["require_independent_test"] = True
+    assert quality_gate(candidate, None, config)[0]
+    candidate["independent_test_report"]["metrics"]["test_auc"] = 0.73
+    assert not quality_gate(candidate, None, config)[0]
+
+
 @pytest.mark.parametrize("auc", [0.7399, None, float("nan"), float("inf")])
 def test_gate_rejects_invalid_or_low_auc(config, auc):
     candidate = valid_evidence(config)

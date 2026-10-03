@@ -324,6 +324,12 @@ correspond au candidat historique étendu, distinct de cette réexécution.
 
 ## Conditions préalables à un usage réel
 
+L'ensemble déterministe de sept oracles LightGBM possède désormais des
+explications SHAP en espace de probabilité, vérifiées sur 400 observations de
+validation avec un fond issu uniquement du train. Le plan de qualification est
+figé avant consultation du test v2 ; le modèle n'est pas promu et son score reste
+non calibré. [Preuves et limites](ensemble-qualification.md).
+
 Définir la population cible, le responsable, une revue humaine effective et un
 recours compréhensible ; valider les droits d'usage et la minimisation des données.
 Obtenir un modèle passant le gate sans l'assouplir ; évaluer sur un test intact

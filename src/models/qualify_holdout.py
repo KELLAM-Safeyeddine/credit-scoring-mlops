@@ -16,7 +16,11 @@ from src.models.evaluate import performance_metrics
 from src.models.explain import create_shap_artifacts
 from src.models.fairness import audit_fairness
 from src.models.promote import candidate_evidence, quality_gate
-from src.models.qualification_protocol import protocol_context, verify_memberships
+from src.models.qualification_protocol import (
+    protocol_context,
+    verify_frozen_candidate,
+    verify_memberships,
+)
 
 
 def reserve_holdout(ledger: Path, identity: dict) -> dict | None:
@@ -56,9 +60,12 @@ def evaluate_holdout(bundle: dict, cfg: dict, evidence: dict, processed: Path) -
     )
     test_evidence = copy.deepcopy(evidence)
     test_evidence.pop("independent_test_report", None)
+    test_evidence.pop("independent_test_required", None)
     test_evidence.update(metrics=metrics, fairness_report=fairness)
     # Same numerical rules, no production comparator: this is an independent diagnostic.
-    passed, rules = quality_gate(test_evidence, None, cfg)
+    diagnostic_cfg = copy.deepcopy(cfg)
+    diagnostic_cfg.setdefault("qualification", {})["require_independent_test"] = False
+    passed, rules = quality_gate(test_evidence, None, diagnostic_cfg)
     return {
         "evaluation_split": "test",
         "run_id": bundle["run_id"],
@@ -83,6 +90,7 @@ def main() -> None:
     cfg = load_config(args.params)
     ledger, _ = protocol_context(cfg)
     content = args.candidate.read_bytes()
+    verify_frozen_candidate(cfg, content)
     bundle = pickle.loads(content)  # Trusted locally generated bundle only.
     processed = project_path(cfg, "processed")
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
@@ -99,9 +107,13 @@ def main() -> None:
     client.log_artifacts(bundle["run_id"], str(output / "shap"), "shap")
     evidence = candidate_evidence(bundle, client)
     validation_evidence = {
-        key: value for key, value in evidence.items() if key != "independent_test_report"
+        key: value
+        for key, value in evidence.items()
+        if key not in {"independent_test_report", "independent_test_required"}
     }
-    passed, rules = quality_gate(validation_evidence, None, cfg)
+    diagnostic_cfg = copy.deepcopy(cfg)
+    diagnostic_cfg.setdefault("qualification", {})["require_independent_test"] = False
+    passed, rules = quality_gate(validation_evidence, None, diagnostic_cfg)
     write_json(output / "validation_gate.json", {"passed": passed, "rules": rules})
     if not passed:
         raise ValueError("Validation/SHAP gate failed; reserved holdout remains unevaluated.")
