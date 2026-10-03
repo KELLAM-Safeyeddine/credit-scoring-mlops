@@ -1,0 +1,5 @@
+outs:
+- md5: 48d08f98043ee47db4749d41d9a7024f
+  size: 86
+  hash: md5
+  path: api_v1.json

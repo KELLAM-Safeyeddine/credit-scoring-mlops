@@ -19,6 +19,9 @@ Les résultats synthétiques ne qualifient pas un usage réel de crédit.
 [Bilan de livraison et vérifications finales](docs/final-validation.md) :
 démonstration complète rejouée, services vérifiés et limite de qualification
 Home Credit explicitement conservée.
+Dernier contrôle : **153 tests**, images reconstruites, scénario Airflow
+`cb451a6031e6` réussi et API rechargée sur v3 synthétique. La qualification
+Home Credit reste non obtenue ; l'API principale conserve `/health` à 503.
 
 Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
 quatre entraînements contraints et huit scores déterministes sur le développement.

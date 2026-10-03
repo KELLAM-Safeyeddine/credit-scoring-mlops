@@ -12,7 +12,64 @@ Cette clôture de développement n'assouplit aucune règle, ne sélectionne aucu
 candidat à partir d'un test déjà consulté et ne promeut aucun candidat rejeté.
 Genre, âge et ratio emploi/âge restent exclus des features du modèle.
 
-## Vérifications exécutées
+## Dernière vérification après les campagnes v2 et v3
+
+Le code du commit `9e2c88b` a été revérifié après exécution des campagnes
+complémentaires. Les images API et Airflow sont reconstruites avec ce code,
+et les cinq services Docker de ce projet sont sains. `creditS` est vérifié
+avant les commandes ; Airflow reste exclusivement dans Docker.
+
+| Vérification exécutée | Résultat actuel |
+|---|---|
+| `creditS/Scripts/make.exe test` | **153 tests réussis**, 41 avertissements, 36,42 s |
+| `creditS/Scripts/make.exe lint` | Ruff conforme |
+| Ruff format | 97 fichiers Python conformes |
+| `python scripts/dev.py up` dans creditS | Deux images construites, cinq services sains |
+| `creditS/Scripts/make.exe demo` | Deux DAGs `success`, API rechargée sur v3 synthétique |
+| DVC racine et dépôts v2/ensemble/v3 | À jour |
+| MLflow 5000/5001 et Airflow 8081 | `/health` HTTP 200 |
+| API Home Credit 8000 | `/live` 200, `/health` 503 : aucun champion |
+| Test v2 | Évalué une fois, échec d'équité âge, registre inchangé |
+| Test v3 | Non évalué, registre absent, aucun candidat sélectionné |
+| Registry Home Credit | Alias vides sur les deux serveurs |
+| CI distante | Non exécutée, aucun remote Git configuré |
+
+La nouvelle démonstration porte l'identifiant **`cb451a6031e6`**, Registry
+`credit-demo-cb451a6031e6`. Evidently détecte le drift et Airflow déclenche
+`credit_demo_retraining` depuis `credit_demo`. Les décisions sont vérifiées :
+
+| Version synthétique | AUC validation | Gate | Résultat |
+|---|---:|---|---|
+| v1 | 0,754800 | Accepté | Déploiement, prédiction et SHAP |
+| v2 | 0,935275 | Rejeté pour DI/EO genre | v1 reste champion |
+| v3 mitigé | 0,958313 | Accepté | champion=3, previous=1, API rechargée |
+
+Le candidat v2 a effectivement une meilleure AUC que v1 et reste rejeté pour
+équité. Le conteneur API temporaire est supprimé à la fin ; les cinq services
+du projet restent démarrés. Aucun alias Home Credit n'a été modifié.
+Les résultats ci-dessus sont synthétiques et ne qualifient pas un modèle de
+crédit réel. [Preuve de démonstration actuelle](assets/delivery-check/demo.json),
+[métriques des trois versions](assets/delivery-check/demo-train-results.json),
+[alertes détectées](assets/delivery-check/alerts.json),
+[état final actuel](assets/delivery-check/execution.json).
+
+Les preuves de ce contrôle sont archivées dans un dépôt DVC isolé
+`runtime/delivery-check-cb451a6031e6`, poussées au remote local commun. Elles
+excluent les secrets et le fichier de contexte de la démonstration. Le dépôt
+isolé est à jour ; six objets JSON ont été poussés. Les états MLflow et Airflow
+restent dans leurs volumes/bases locaux ; DVC ne constitue
+pas une sauvegarde de ces bases.
+
+Le [candidat d'ensemble](ensemble-qualification.md) donne au test v2 AUC
+0,74159, DI âge 0,79575 et EO âge 0,11249 : version locale 5 rejetée.
+Le [protocole v3](protocol-v3.md) est clos : ses deux configurations passent
+les règles numériques de production sur validation, mais pas la marge de
+sélection préspécifiée AUC 0,745. Ses AUC sont 0,74105 et 0,74073 ; aucun
+candidat n'est retenu, donc aucun test v3 n'est consulté. Sa reprise numérique
+est documentée : deux configurations et trois tentatives de fit. Aucun de
+ces résultats n'est présenté comme un champion Home Credit accepté.
+
+## Premier bilan de livraison (historique)
 
 | Vérification | Résultat |
 |---|---|
@@ -117,7 +174,9 @@ une fois : AUC 0,74618, DI âge 0,79692, écart EO âge 0,25758. Il reste rejet�
 [Rapport et protocole historique](qualification.md).
 
 Les six essais préspécifiés du [protocole v2](protocol-v2.md) dépassent 0,74
-d'AUC validation, mais échouent sur EO âge. Son test demeure fermé.
+d'AUC validation, mais échouent sur EO âge. À la clôture de ces essais, son
+test restait fermé ; il a ensuite été évalué une fois sur l'ensemble figé et
+rejeté pour équité, comme décrit dans l'actualisation ci-dessus.
 L'[étude de développement Fairlearn](constrained-development.md) ultérieure
 examine quatre réductions et huit scores déterministes. Le point satisfaisant
 l'équité atteint DI âge 0,94501, EO âge 0,05894 et AUC 0,73665 : il échoue à

@@ -318,7 +318,9 @@ historiques. Son candidat repondéré `reweighing_1.5`, run
 `6e42407b49084c6dbcf619300da6be3a`, est enregistré comme version **4** du Registry
 local et rejeté pour AUC 0,73114 sous 0,74. Les preuves SHAP et règles d'équité
 passent ; cela ne compense pas l'échec de performance. Aucun alias Home Credit
-n'est ajouté. Le test v2 reste fermé. La version locale 3 décrite plus haut
+n'est ajouté. Lors de cette réexécution, le test v2 était encore fermé ;
+l'ensemble figé a depuis été évalué une fois et rejeté pour équité par âge.
+La version locale 3 décrite plus haut
 correspond au candidat historique étendu, distinct de cette réexécution.
 [Bilan de livraison et preuves](final-validation.md).
 

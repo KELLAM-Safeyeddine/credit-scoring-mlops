@@ -1,0 +1,13 @@
+{
+  "alerts": [
+    "data_drift",
+    "prediction_drift",
+    "data_drift.AMT_INCOME_TOTAL"
+  ],
+  "auc_alert_rule": "confidence_upper_below_floor",
+  "not_evaluable": [
+    "performance"
+  ],
+  "raw_auc_below_floor": false,
+  "trigger_retraining": true
+}
