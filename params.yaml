@@ -104,6 +104,22 @@ constrained_development:
   eps: 0.01
   difference_bound: 0.02
   lightgbm: {n_estimators: 150, num_leaves: 15, learning_rate: 0.05, min_child_samples: 100, reg_lambda: 5.0, n_jobs: 4}
+constrained_capacity_development:
+  source_params: runtime/protocol-v2/params.yaml
+  output: runtime/constrained-capacity-development
+  eps: 0.01
+  difference_bound: 0.02
+  trials:
+    - name: equalized-odds-intersection-300-leaves7
+      constraint: EqualizedOdds
+      scope: intersection
+      max_iter: 12
+      lightgbm: {n_estimators: 300, num_leaves: 7, learning_rate: 0.05, min_child_samples: 80, reg_lambda: 5.0, n_jobs: 4}
+    - name: equalized-odds-intersection-300-leaves15
+      constraint: EqualizedOdds
+      scope: intersection
+      max_iter: 12
+      lightgbm: {n_estimators: 300, num_leaves: 15, learning_rate: 0.03, min_child_samples: 100, reg_lambda: 5.0, n_jobs: 4}
 independent_protocol:
   id: home-credit-independent-v2
   directory: runtime/protocol-v2

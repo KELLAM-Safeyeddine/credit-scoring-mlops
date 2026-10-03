@@ -6,7 +6,8 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from src.models.constrained_study import deterministic_scores
+from src.config import load_config
+from src.models.constrained_study import deterministic_scores, study_trials
 
 
 class Oracle:
@@ -59,3 +60,33 @@ def test_invalid_oracle_probability_is_rejected():
     reduction.predictors_.loc[2] = Oracle([1.2, 0.3])
     with pytest.raises(ValueError, match="\u005b0, 1\u005d"):
         deterministic_scores(reduction, np.zeros((2, 1)), "probability_average")
+
+
+def test_study_plans_are_bounded_and_copied():
+    cfg = load_config()
+    assert len(study_trials(cfg["constrained_development"])) == 4
+    settings = cfg["constrained_capacity_development"]
+    trials = study_trials(settings)
+    assert len(trials) == 2
+    trials[0]["lightgbm"]["n_estimators"] = 1
+    assert settings["trials"][0]["lightgbm"]["n_estimators"] == 300
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    ["excess_fits", "unsafe_name", "sensitive_parameter", "excess_iterations", "duplicate_name"],
+)
+def test_invalid_study_plan_fails_before_training(mutation):
+    settings = load_config()["constrained_capacity_development"]
+    if mutation == "excess_fits":
+        settings["trials"] *= 3
+    elif mutation == "unsafe_name":
+        settings["trials"][0]["name"] = "../outside"
+    elif mutation == "sensitive_parameter":
+        settings["trials"][0]["lightgbm"]["CODE_GENDER"] = True
+    elif mutation == "excess_iterations":
+        settings["trials"][0]["max_iter"] = 21
+    else:
+        settings["trials"][1]["name"] = settings["trials"][0]["name"]
+    with pytest.raises(ValueError):
+        study_trials(settings)

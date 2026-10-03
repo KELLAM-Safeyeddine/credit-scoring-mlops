@@ -297,6 +297,20 @@ Ces repères européens ne déterminent pas automatiquement le régime applicabl
 fournisseur/déployeur et les bases juridiques doivent être établis. Ce dépôt ne
 constitue ni une certification réglementaire ni une procédure de recours.
 
+## Développement contraint à capacité accrue — 3 octobre 2026
+
+L'[étude à deux ajustements](constrained-capacity-development.md) sur le train et
+la validation v2 obtient un ensemble déterministe de sept oracles LightGBM
+passant le screening de développement au seuil global 0,417 : AUC 0,74725,
+DI âge 0,80968, EO âge 0,09605, DI genre 0,92951, EO genre 0,01090,
+recall 0,73552, acceptation 0,58550, précision 0,14318. Les marges âge sont
+faibles et la proportion de refus importante ; les scores ne sont pas des PD
+calibrées. Les garanties de la politique aléatoire Fairlearn ne s'appliquent
+pas à cette moyenne de probabilités. L'instantané est sauvegardé et ses
+métriques/audits reproduits sur toute la validation après rechargement.
+**Aucun champion qualifié** : SHAP d'ensemble, plan de qualification figé et
+évaluation indépendante restent nécessaires. Le test v2 n'est pas évalué.
+
 ## Réexécution de livraison — 3 octobre 2026
 
 Le pipeline racine à 10 % est rejoué avec le code livré et retrouve ses métriques

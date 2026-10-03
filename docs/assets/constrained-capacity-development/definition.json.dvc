@@ -1,0 +1,5 @@
+outs:
+- md5: 5d3da088bad98253fe6eaa09d9b83d86
+  size: 1967
+  hash: md5
+  path: definition.json

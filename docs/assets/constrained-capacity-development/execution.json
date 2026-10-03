@@ -1,0 +1,35 @@
+{
+  "active_oracles": 7,
+  "holdout_ledger_exists": false,
+  "home_credit_aliases": {
+    "http://localhost:5000": {},
+    "http://localhost:5001": {}
+  },
+  "promotion_allowed": false,
+  "ruff_passed": true,
+  "runs": {
+    "2cb35a1c377449df9fb7bcf46d5cb53b": {
+      "best_gap": 0.00735556106663187,
+      "oracle_calls": 35.0,
+      "status": "FINISHED",
+      "training_seconds": 66.38478900000018
+    },
+    "8dd9be28291b42debd5f0fff58731d99": {
+      "best_gap": 0.013026444503562794,
+      "oracle_calls": 35.0,
+      "status": "FINISHED",
+      "training_seconds": 92.06286239999986
+    }
+  },
+  "selected_run_id": "2cb35a1c377449df9fb7bcf46d5cb53b",
+  "shap_ensemble_verified": false,
+  "snapshot": "equalized-odds-intersection-300-leaves7-probability_average.pkl",
+  "snapshot_bytes": 2017144,
+  "snapshot_sha256": "d93e7be08ab2a6b179b4cf32ae5b8e9434a1365e7685771c5892c7f49a6194bc",
+  "source_protocol_verified": "home-credit-independent-v2",
+  "status": "development_screen_passed_not_qualified",
+  "test_evaluated": false,
+  "tests_passed": 139,
+  "validation_roundtrip_metrics_identical": true,
+  "validation_roundtrip_rows": 14760
+}
