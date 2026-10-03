@@ -326,6 +326,11 @@ correspond au candidat historique étendu, distinct de cette réexécution.
 
 ## Conditions préalables à un usage réel
 
+**État définitif du projet :** le candidat v3 a depuis passé le gate sur son
+test indépendant unique et est servi comme champion version 6 par l'API Docker.
+Les descriptions de rejets et de test fermé qui suivent retracent les étapes
+historiques. Voir les [résultats finaux](project-completion.md).
+
 L'ensemble déterministe de sept oracles LightGBM possède désormais des
 explications SHAP en espace de probabilité, vérifiées sur 400 observations de
 validation avec un fond issu uniquement du train. Après gel du plan, le test v2
@@ -372,3 +377,38 @@ sauvegardes, incidents, retour au champion précédent et validation réglementa
 Preuves et fonctionnement : [architecture](architecture.md), [monitoring](monitoring.md),
 [démonstration](demo.md), [validation phase 11](phase11-validation.md) et
 [validation phase 12](phase12-validation.md).
+
+## Résultats définitifs du champion Home Credit
+
+L'évaluation unique porte sur 19 681 clients du test v3, au seuil figé 0,397.
+AUC 0,752030, PR-AUC 0,225404, recall 0,789805, precision 0,139382,
+acceptation 0,542503. DI âge 0,886048 / genre 0,963729 ; écarts equal opportunity
+âge 0,061134 / genre 0,020345, avec supports suffisants selon le gate.
+Le positif reste défaut prédit/refus et le DI compare les taux d'acceptation.
+Le biais est mesuré et contrôlé selon ces métriques sur cette population.
+
+| Groupe test v3 | Clients | Défauts | Acceptation | TPR refus | FPR refus |
+|---|---:|---:|---:|---:|---:|
+| Âge <30 | 2 911 | 326 | 0,5036 | 0,8067 | 0,4573 |
+| Âge 30–45 | 8 015 | 732 | 0,5352 | 0,8046 | 0,4306 |
+| Âge 45–60 | 6 510 | 417 | 0,5599 | 0,7626 | 0,4180 |
+| Âge 60+ | 2 245 | 114 | 0,5684 | 0,7456 | 0,4148 |
+| Genre F | 12 922 | 885 | 0,5494 | 0,7808 | 0,4264 |
+| Genre M | 6 758 | 704 | 0,5294 | 0,8011 | 0,4321 |
+
+L'unique observation XNA est rapportée séparément mais exclue de la comparaison
+F/M pour support insuffisant ; aucune conclusion d'équité ne porte sur ce groupe.
+
+Le quality gate complet accepte le candidat ; champion 6 local et Docker.
+Le transfert conserve le pipeline et les preuves originales, sans nouveau
+test ni entraînement. Les scores de l'API Docker correspondent au modèle source,
+SHAP renvoie trois raisons et les journaux pseudonymisés ont 264 features.
+Le test est désormais fermé à toute sélection ou réglage ultérieur.
+
+Les limites demeurent : validation utilisée pour plusieurs études, score non
+calibré, dataset historique non représentatif d'une population bancaire actuelle,
+API ne couvrant qu'un sous-ensemble des entrées (manquants explicités puis imputés),
+proxies possibles, équité non garantie hors des groupes et métriques mesurés.
+La réussite du gate du projet ne constitue ni validation réglementaire ni
+autorisation d'une décision de crédit automatisée en usage réel.
+[Preuves, performances par groupe et déploiement](project-completion.md).

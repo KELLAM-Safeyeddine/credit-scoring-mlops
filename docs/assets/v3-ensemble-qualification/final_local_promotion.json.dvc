@@ -1,0 +1,5 @@
+outs:
+- md5: 63f93b4d2a4b487556fa477e02734269
+  size: 2687
+  hash: md5
+  path: final_local_promotion.json

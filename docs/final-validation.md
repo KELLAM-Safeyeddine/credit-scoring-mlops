@@ -4,15 +4,17 @@
 
 La chaîne **DVC → MLflow → Airflow → Docker → FastAPI → Evidently** est
 implémentée, avec tests, quality gate, audits Fairlearn, explications SHAP,
-monitoring, démonstration et documentation. **La qualification d'un champion
-Home Credit reste non obtenue.** La démonstration fonctionne sur un modèle
-synthétique distinct ; ses résultats ne valident pas un modèle de crédit réel.
+monitoring, démonstration et documentation. **La qualification finale du
+champion Home Credit v3 a réussi**, après les contrôles historiques ci-dessous.
+Il est promu en version 6 et servi par l'API Docker ; 160 tests passent.
+[Bilan définitif et preuves](project-completion.md).
+La démonstration fonctionne sur un modèle synthétique distinct.
 
 Cette clôture de développement n'assouplit aucune règle, ne sélectionne aucun
 candidat à partir d'un test déjà consulté et ne promeut aucun candidat rejeté.
 Genre, âge et ratio emploi/âge restent exclus des features du modèle.
 
-## Dernière vérification après les campagnes v2 et v3
+## Vérification historique avant qualification finale
 
 Le code du commit `9e2c88b` a été revérifié après exécution des campagnes
 complémentaires. Les images API et Airflow sont reconstruites avec ce code,

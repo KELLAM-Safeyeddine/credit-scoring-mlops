@@ -1,0 +1,116 @@
+{
+  "champion_version": "6",
+  "failed_rules": [],
+  "gate_status": "accepted",
+  "passed": true,
+  "qualified_source_run_id": "be0bd59daa9c4b1ba83a23798b016a86",
+  "registered_model_name": "credit-scoring",
+  "rules": {
+    "AGE_GROUP.disparate_impact": {
+      "actual": 0.8520345977933683,
+      "passed": true,
+      "requirement": 0.8
+    },
+    "AGE_GROUP.equal_opportunity_difference": {
+      "actual": 0.06507445464583062,
+      "passed": true,
+      "requirement": 0.1
+    },
+    "AGE_GROUP.support": {
+      "actual": [
+        "30-45",
+        "45-60",
+        "60+",
+        "<30"
+      ],
+      "passed": true,
+      "requirement": [
+        "<30",
+        "30-45",
+        "45-60",
+        "60+"
+      ]
+    },
+    "CODE_GENDER.disparate_impact": {
+      "actual": 0.995486346303761,
+      "passed": true,
+      "requirement": 0.8
+    },
+    "CODE_GENDER.equal_opportunity_difference": {
+      "actual": 0.027496167270117722,
+      "passed": true,
+      "requirement": 0.1
+    },
+    "CODE_GENDER.support": {
+      "actual": [
+        "F",
+        "M"
+      ],
+      "passed": true,
+      "requirement": [
+        "F",
+        "M"
+      ]
+    },
+    "acceptance_bounds": {
+      "actual": 0.5366597225750724,
+      "passed": true,
+      "requirement": [
+        0.1,
+        0.95
+      ]
+    },
+    "auc_vs_production": {
+      "actual": null,
+      "passed": true,
+      "requirement": "first promotion: no production comparator"
+    },
+    "group_free_deterministic_inference": {
+      "actual": {
+        "randomized_decision": false,
+        "requires_sensitive_at_inference": false
+      },
+      "passed": true,
+      "requirement": "deterministic scoring without protected attributes at inference"
+    },
+    "independent_test": {
+      "actual": [],
+      "passed": true,
+      "requirement": "same performance/fairness rules on the frozen independent test"
+    },
+    "minimum_auc": {
+      "actual": 0.7515124779342616,
+      "passed": true,
+      "requirement": 0.74
+    },
+    "minimum_recall": {
+      "actual": 0.7872876022655758,
+      "passed": true,
+      "requirement": 0.5
+    },
+    "shap_artifacts": {
+      "actual": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ],
+      "passed": true,
+      "requirement": [
+        "bar.png",
+        "shap_report.json",
+        "summary.png",
+        "waterfall_accepted.png",
+        "waterfall_borderline.png",
+        "waterfall_refused.png"
+      ]
+    }
+  },
+  "run_id": "ebedf3ecbea948e482e0547193c0db3e",
+  "source_tracking_uri": "http://localhost:5000",
+  "target_tracking_uri": "http://localhost:5001",
+  "test_reevaluated": false,
+  "version": "6"
+}

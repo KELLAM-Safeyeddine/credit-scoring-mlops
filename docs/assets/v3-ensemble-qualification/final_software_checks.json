@@ -1,0 +1,8 @@
+{
+  "dependency_warnings": 41,
+  "formatted_python_files": 100,
+  "ruff_passed": true,
+  "tests_passed": 160,
+  "tests_seconds": 32.01,
+  "venv": "creditS"
+}

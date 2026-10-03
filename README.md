@@ -9,12 +9,13 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 158 tests passent, builds Docker réussis,
-démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
-Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
-mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
-écart d'égalité des chances 0,25758. Il est enregistré comme rejeté, sans promotion.
-Les résultats synthétiques ne qualifient pas un usage réel de crédit.
+**Projet pédagogique terminé le 3 octobre 2026 : 160 tests passent et le
+champion Home Credit version 6 est déployé dans l'API Docker.** Le candidat
+figé passe le quality gate sur 19 681 clients de test indépendants : AUC
+**0,75203**, DI âge **0,88605**, écart equal opportunity âge **0,06113**.
+Les biais sont mesurés et contrôlés selon ces métriques et les règles du projet.
+Le score reste non calibré ; cette qualification ne valide pas un usage bancaire.
+[Résultats définitifs et preuves](docs/project-completion.md).
 
 [Bilan de livraison et vérifications finales](docs/final-validation.md) :
 démonstration complète rejouée, services vérifiés et limite de qualification
@@ -22,6 +23,11 @@ Home Credit explicitement conservée.
 Contrôle de livraison précédent : **153 tests**, images reconstruites, scénario Airflow
 `cb451a6031e6` réussi et API rechargée sur v3 synthétique. La qualification
 Home Credit reste non obtenue ; l'API principale conserve `/health` à 503.
+
+Ce contrôle décrit l'état antérieur à la qualification finale : l'API principale
+répond maintenant `/health` **200**, sert le champion 6, et renvoie trois raisons
+SHAP. Les campagnes historiques ci-dessous restent conservées pour traçabilité ;
+elles ne décrivent pas l'état actuel du déploiement.
 
 Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
 quatre entraînements contraints et huit scores déterministes sur le développement.
@@ -52,6 +58,11 @@ Les [preuves SHAP et le plan figé v3](docs/v3-ensemble-qualification.md) sont
 désormais préparés : neuf oracles, 400 observations expliquées, reconstruction
 à 3,11 × 10⁻⁹. Le gate validation + SHAP passe, mais la promotion reste bloquée
 pour test indépendant non évalué. Le test v3 reste intact ; **158 tests passent**.
+
+Après autorisation finale, l'évaluation v3 unique passe et le champion est
+promu sur MLflow local (5000), puis transféré via les API MLflow au Registry
+Docker (5001), sans réévaluer le test. L'API principale 8000 le recharge et ses
+scores sont identiques au modèle qualifié. **160 tests passent**.
 
 ## Architecture
 

@@ -101,3 +101,12 @@ python -m ruff check .
 
 La prochaine étape, après validation utilisateur, est l'évaluation indépendante
 unique du test v3 au seuil figé. Elle n'est pas exécutée pendant cette préparation.
+
+## Évaluation et déploiement ultérieurs
+
+Après autorisation utilisateur, l'évaluation indépendante unique passe : AUC
+0,752030, DI âge 0,886048, EO âge 0,061134. Le candidat est promu champion 6,
+puis transféré au Registry Docker et rechargé dans l'API. Les constats de test
+intact et de promotion bloquée ci-dessus décrivent la préparation historique ;
+le plan et ses preuves ne sont pas réécrits après connaissance du résultat.
+[Bilan définitif](project-completion.md).

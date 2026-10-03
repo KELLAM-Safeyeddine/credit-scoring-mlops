@@ -3,7 +3,9 @@
 `make demo` déroule une boucle réelle DVC → MLflow → Airflow → Docker/FastAPI
 → Evidently, sur des **données synthétiques**. Elle prouve les transitions du
 système ; elle ne qualifie pas un modèle Home Credit. Le candidat Home Credit
-reste rejeté pour AUC insuffisante et l'API principale reste sans champion.
+avait initialement été rejeté ; la qualification finale v3 a depuis réussi.
+L'API principale sert désormais le champion Home Credit version 6.
+[Résultats définitifs](project-completion.md).
 
 ## Exécution
 
