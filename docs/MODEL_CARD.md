@@ -353,6 +353,14 @@ et le gel d'un plan d'évaluation doivent précéder l'ouverture du test v3 inta
 Le score reste non calibré, le best_gap dépasse la précision demandée et la
 robustesse du DI proche de la marge reste à démontrer. Aucun champion promu.
 
+Les [preuves SHAP v3 et le plan d'évaluation](v3-ensemble-qualification.md)
+sont ensuite figés sans nouveau fit ni choix de seuil. Neuf oracles à 500 arbres
+sont expliqués sur 400 lignes avec un fond de 50 lignes train ; reconstruction
+du score à 3,11 × 10⁻⁹. Le gate validation + SHAP passe. Le gate complet reste
+bloqué pour test indépendant non évalué, le registre de test parent v3 demeure
+absent et les alias Home Credit vides. La validation réutilisée ne permet pas
+de conclure à une qualification indépendante.
+
 Définir la population cible, le responsable, une revue humaine effective et un
 recours compréhensible ; valider les droits d'usage et la minimisation des données.
 Obtenir un modèle passant le gate sans l'assouplir ; évaluer sur un test intact

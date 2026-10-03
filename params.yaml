@@ -148,6 +148,15 @@ ensemble_qualification:
   plan_id: home-credit-ensemble-evaluation-v1
   background_rows: 50
   shap_rows: 400
+ensemble_qualification_v3:
+  source_params: runtime/protocol-v3/params.yaml
+  study_report: runtime/v3-refinement-development/report.json
+  snapshot: runtime/v3-refinement-development/eo-intersection-500-leaves15-probability_average.pkl
+  snapshot_sha256: fe480d11ede2cd39f609ff57a56f0041f86a75aa0f5b26b90603540e64914e68
+  output: runtime/v3-ensemble-qualification
+  plan_id: home-credit-ensemble-evaluation-v3
+  background_rows: 50
+  shap_rows: 400
 independent_protocol:
   id: home-credit-independent-v2
   directory: runtime/protocol-v2

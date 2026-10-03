@@ -1,0 +1,5 @@
+outs:
+- md5: e9e2eca4aca7c61204fc194bc2a71434
+  size: 8298695
+  hash: md5
+  path: candidate.pkl

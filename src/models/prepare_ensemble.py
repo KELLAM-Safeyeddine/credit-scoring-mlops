@@ -1,5 +1,6 @@
 """Package frozen development oracles, explain them and freeze one evaluation plan."""
 
+import argparse
 import copy
 import hashlib
 import importlib.metadata
@@ -7,6 +8,8 @@ import json
 import pickle
 import shutil
 import sys
+from pathlib import Path
+from typing import Any
 
 import mlflow
 import mlflow.sklearn
@@ -25,9 +28,9 @@ from src.models.promote import candidate_evidence, quality_gate
 from src.models.qualification_protocol import protocol_context, verify_memberships
 
 
-def prepare() -> dict:
+def prepare(settings_key: str = "ensemble_qualification", resume: bool = False) -> dict:
     """Create SHAP and an immutable plan without reading test observations or targets."""
-    settings = load_config()["ensemble_qualification"]
+    settings = load_config()[settings_key]
     source = ROOT / settings["source_params"]
     cfg = load_config(source)
     ledger, parent = protocol_context(cfg)
@@ -39,9 +42,24 @@ def prepare() -> dict:
     original = pickle.loads(snapshot.read_bytes())
     if original["mode"] != "probability_average":
         raise ValueError("Only the selected probability ensemble can be explained here.")
+    study = None
+    if settings.get("study_report"):
+        study = json.loads((ROOT / settings["study_report"]).read_text(encoding="utf-8"))
+        selection = study["selected_candidate"]
+        if (
+            not study["development_only"]
+            or study["test_evaluated"]
+            or selection is None
+            or selection["run_id"] != original["run_id"]
+            or selection["snapshot"] != snapshot.name
+            or selection["mode"] != original["mode"]
+        ):
+            raise ValueError("Snapshot is not the selected unopened development candidate.")
     output = ROOT / settings["output"]
-    if output.exists():
+    if output.exists() and not resume:
         raise ValueError("Preserve the existing preparation and evaluation plan.")
+    if resume and (not output.exists() or (output / "protocol.json").exists()):
+        raise ValueError("Resume only an interrupted preparation without a frozen plan.")
     processed = project_path(cfg, "processed")
     train = pd.read_csv(processed / "X_train.csv", index_col="SK_ID_CURR")
     validation = pd.read_csv(processed / "X_val.csv", index_col="SK_ID_CURR")
@@ -70,6 +88,28 @@ def prepare() -> dict:
     np.testing.assert_allclose(
         pipeline.predict_proba(validation)[:, 1], expected, atol=1e-12, rtol=0
     )
+    if resume:
+        bundle = pickle.loads((output / "candidate.pkl").read_bytes())
+        report = json.loads((output / "shap/shap_report.json").read_text(encoding="utf-8"))
+        if (
+            bundle["selected_training_run_id"] != original["run_id"]
+            or bundle["threshold"] != original["threshold"]
+            or bundle["columns"] != original["columns"]
+            or bundle["metrics"]["validation_auc"] != original["metrics"]["validation_auc"]
+            or report["model_run_id"] != bundle["run_id"]
+        ):
+            raise ValueError("Interrupted preparation differs from the selected candidate.")
+        np.testing.assert_array_equal(bundle["pipeline"][-1].background, mixture.background)
+        np.testing.assert_allclose(
+            bundle["pipeline"].predict_proba(validation)[:, 1], expected, atol=1e-12, rtol=0
+        )
+        mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
+        run = mlflow.MlflowClient().get_run(bundle["run_id"])
+        if run.info.status != "FINISHED" or run.data.tags["parent_run_id"] != original["run_id"]:
+            raise ValueError("Resume requires the matching finished preparation run.")
+        return finish_preparation(
+            settings, cfg, parent, ledger, processed, output, bundle, report, study
+        )
     output.mkdir(parents=True)
     mlflow.set_tracking_uri(cfg["mlflow"]["tracking_uri"])
     mlflow.set_experiment("credit-scoring-constrained-development")
@@ -132,14 +172,38 @@ def prepare() -> dict:
         mlflow.log_artifacts(str(output / "shap"), "shap")
         mlflow.set_tag("shap_artifacts_present", "true")
         mlflow.set_tag("independent_test_required", "true")
+    return finish_preparation(
+        settings, cfg, parent, ledger, processed, output, bundle, report, study
+    )
+
+
+def validation_shap_screen(evidence: dict, cfg: dict) -> tuple[bool, dict]:
+    """Check validation and SHAP only; this never authorizes model promotion."""
+    validation_evidence = {
+        key: value for key, value in evidence.items() if key != "independent_test_required"
+    }
+    validation_cfg = copy.deepcopy(cfg)
+    validation_cfg["qualification"]["require_independent_test"] = False
+    return quality_gate(validation_evidence, None, validation_cfg)
+
+
+def finish_preparation(
+    settings: dict[str, Any],
+    cfg: dict[str, Any],
+    parent: dict[str, Any],
+    ledger: Path,
+    processed: Path,
+    output: Path,
+    bundle: dict[str, Any],
+    report: dict[str, Any],
+    study: dict[str, Any] | None,
+) -> dict[str, Any]:
+    """Freeze the plan after validation checks, keeping the promotion gate closed."""
     content = pickle.dumps(bundle, protocol=pickle.HIGHEST_PROTOCOL)
     (output / "candidate.pkl").write_bytes(content)
     client = mlflow.MlflowClient()
     evidence = candidate_evidence(bundle, client)
-    validation_evidence = {
-        key: value for key, value in evidence.items() if key != "independent_test_required"
-    }
-    passed, rules = quality_gate(validation_evidence, None, cfg)
+    passed, rules = validation_shap_screen(evidence, cfg)
     if not passed:
         raise ValueError("Validation and actual SHAP evidence must pass before plan freezing.")
     pending_passed, pending_rules = quality_gate(evidence, None, cfg)
@@ -187,7 +251,10 @@ def prepare() -> dict:
         "test_evaluations_allowed": 1,
         "test_retuning_allowed": False,
         "test_evaluated": False,
-        "original_six_trial_protocol_changed": False,
+        "parent_selection_plan_changed": False,
+        "parent_selection_budget": parent["selection_budget"],
+        "source_validation_reused": bool(study and study.get("source_validation_reused")),
+        "development_study_report": settings.get("study_report"),
         "shared_holdout_ledger": str(ledger.relative_to(ROOT)).replace("\\", "/"),
     }
     write_json(output / "protocol.json", plan)
@@ -201,7 +268,7 @@ def prepare() -> dict:
         "promotion_gate_passed": False,
         "test_evaluated": False,
         "shared_holdout_ledger": plan["shared_holdout_ledger"],
-        "background_rows": len(background),
+        "background_rows": len(bundle["pipeline"][-1].background),
         "shap_rows": report["sample_rows"],
         "shap_reconstruction_error": report["max_probability_reconstruction_error"],
     }
@@ -211,4 +278,8 @@ def prepare() -> dict:
 
 if __name__ == "__main__":
     sys.stdout.reconfigure(encoding="utf-8")
-    print(json.dumps(prepare(), indent=2))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--settings", default="ensemble_qualification")
+    parser.add_argument("--resume", action="store_true")
+    args = parser.parse_args()
+    print(json.dumps(prepare(args.settings, args.resume), indent=2))

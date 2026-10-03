@@ -9,7 +9,7 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 154 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 158 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
@@ -47,6 +47,11 @@ le modèle à 500 arbres passe les marges de sélection : AUC 0,75151, DI âge
 0,85203 et écart EO âge 0,06507. Son instantané est vérifié après rechargement ;
 **154 tests passent**. Il reste un candidat de développement : SHAP et qualification
 indépendante sont encore nécessaires, test v3 intact et aucun champion promu.
+
+Les [preuves SHAP et le plan figé v3](docs/v3-ensemble-qualification.md) sont
+désormais préparés : neuf oracles, 400 observations expliquées, reconstruction
+à 3,11 × 10⁻⁹. Le gate validation + SHAP passe, mais la promotion reste bloquée
+pour test indépendant non évalué. Le test v3 reste intact ; **158 tests passent**.
 
 ## Architecture
 

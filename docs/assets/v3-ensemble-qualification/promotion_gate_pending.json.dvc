@@ -1,0 +1,5 @@
+outs:
+- md5: 06ea64aa897ac57731e83b4edcf3d492
+  size: 2495
+  hash: md5
+  path: promotion_gate_pending.json

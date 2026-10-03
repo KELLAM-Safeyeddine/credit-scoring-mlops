@@ -1,0 +1,29 @@
+{
+  "active_oracles": 9,
+  "candidate_bytes": 8298695,
+  "features": 264,
+  "figures_visually_inspected": true,
+  "frozen_candidate_sha256": "fa44ff4fe614630456f5980301b852535e488a4dfb1bd079ecab0df7c2244ecd",
+  "frozen_threshold": 0.397,
+  "home_credit_aliases": {},
+  "mlflow_reload_max_error": 0.0,
+  "model_uri": "models:/m-7f7e8dd48ed44f829c98e924da084e4f",
+  "parent_plan_unchanged": true,
+  "preparation_recovery": "one finalization-only resume after validation screen incorrectly applied independent-test requirement; no refit, no SHAP regeneration, no test read",
+  "promotion_gate_passed": false,
+  "run_id": "be0bd59daa9c4b1ba83a23798b016a86",
+  "shap_files_verified": [
+    "bar.png",
+    "shap_report.json",
+    "summary.png",
+    "waterfall_accepted.png",
+    "waterfall_borderline.png",
+    "waterfall_refused.png"
+  ],
+  "shared_holdout_ledger": "C:\\Users\\SafeyeddineK\\Desktop\\Projet\\credit-scoring-mlops\\runtime\\qualification-holdouts\\home-credit-independent-v3.json",
+  "source_validation_reused": true,
+  "test_evaluated": false,
+  "test_ledger_absent": true,
+  "v2_candidate_source_hashes_and_ledger_unchanged": true,
+  "validation_shap_gate_passed": true
+}
