@@ -1,5 +1,9 @@
 # Preuves — phase 9
 
+J'ai vérifié les images Docker, les healthchecks et le démarrage de la stack Compose.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Validation exécutée sur Windows avec `creditS` Python 3.11.9, Docker Engine
 29.4.2 et Docker Compose 5.1.3, conteneurs Linux.
 

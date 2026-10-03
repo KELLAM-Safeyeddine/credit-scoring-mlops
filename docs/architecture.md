@@ -1,5 +1,7 @@
 # Architecture et contrats
 
+J'ai séparé la préparation des données, les décisions de promotion et le service d'inférence pour conserver une traçabilité de bout en bout.
+
 ## Flux de données et décisions
 
 ```mermaid
@@ -28,9 +30,9 @@ flowchart TD
     ALERT -->|Non| ARCH[Rapports HTML et JSON archivés]
 ```
 
-Le flowchart montre les fonctions disponibles. Home Credit n'a pas encore de
-champion accepté ; ses prédictions de monitoring proviennent du candidat mitigé
-figé, clairement identifié comme diagnostic. Les DAGs synthétiques `credit_demo`
+Le flowchart montre les fonctions disponibles. J'ai déployé le champion Home Credit
+version 6. Les lots simulés historiques conservent leur candidat mitigé figé de
+diagnostic ; les événements API du champion utilisent son contrat de 264 features. Les DAGs synthétiques `credit_demo`
 et `credit_demo_retraining` prouvent la branche acceptation/promotion/rechargement
 dans un modèle Registry distinct. Le réentraînement standard ne mélange pas
 automatiquement des labels de production au snapshot Kaggle.
@@ -72,7 +74,9 @@ dans `docs/assets/` est versionné pour rendre le README lisible sans les donné
 ## Invariants et comportement d'échec
 
 Toutes les tables X/y/sensitive d'un split gardent des index `SK_ID_CURR` alignés.
-Les 261 features sont ordonnées et partagées entre entraînement, API et monitoring.
+J'ai conservé un contrat ordonné de features pour chaque modèle : 261 au développement
+initial, puis 264 pour le champion v3. Entraînement, API et monitoring d'une même
+version utilisent le même contrat.
 La liste exclut TARGET, identifiants, genre, âge et `EMPLOYED_AGE_RATIO`.
 Les groupes sensibles restent des données d'audit, accessibles séparément.
 

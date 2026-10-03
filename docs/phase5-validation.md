@@ -1,5 +1,9 @@
 # Phase 5 — SHAP, équité et mitigations
 
+J'ai analysé les explications SHAP, les proxys et les écarts d'équité, puis comparé les méthodes de mitigation.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Environnement utilisé : `creditS`, Python 3.11.9, SHAP 0.49.1, Fairlearn 0.13.0,
 MLflow 3.10.1. Signatures inspectées sur les installations réelles, puis
 ThresholdOptimizer et ExponentiatedGradient exécutés sur les données du projet.

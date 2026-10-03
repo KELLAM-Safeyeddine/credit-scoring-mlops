@@ -1,5 +1,7 @@
 # Orchestration Airflow (phase 7)
 
+J'ai organisé l'entraînement et la surveillance dans Airflow, avec des DAGs minces et une logique métier séparée dans `src/`.
+
 Airflow 2.11.0 tourne exclusivement dans Docker, avec LocalExecutor et PostgreSQL.
 Les dépendances ML tournent dans le `creditS` propre à l'image, séparées de celles
 d'Airflow. Le venv Windows n'est jamais copié. XGBoost utilise sa distribution CPU.
@@ -75,7 +77,8 @@ identifiée par le run de monitoring ; son retry ne crée pas une seconde exécu
 
 Les huit scénarios de phase 10 sont opérationnels : 01–03 sans alerte, 04–08 avec
 alertes après réception des labels. Les prédictions proviennent du candidat mitigé
-figé, identifié comme diagnostic, sans champion Home Credit déployé. Les règles
+figé, identifié comme diagnostic. Le champion Home Credit version 6 est désormais
+déployé séparément dans l'API Docker. Les règles
 et résultats sont détaillés dans `docs/monitoring.md`.
 
 Les DAGs `credit_demo` et `credit_demo_retraining` réalisent une boucle séparée

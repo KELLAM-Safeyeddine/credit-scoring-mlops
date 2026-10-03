@@ -1,17 +1,19 @@
 # Model Card — Home Credit et état de qualification
 
+Je présente dans cette Model Card mes choix de données, les performances mesurées, les audits d'équité et les limites d'usage du modèle.
+
 Date de revue : **3 octobre 2026**. Usage prévu : apprentissage MLOps, analyse
 offline du risque, explicabilité et audit d'équité. Responsable opérationnel,
 population bancaire cible et procédure de recours ne sont pas définis : ce dépôt
 n'est pas autorisé à prendre des décisions réelles d'octroi ou de refus de crédit.
 
-**Statut : aucun champion Home Credit accepté.** Le Registry local contient
-les versions 1–3 rejetées ; le Registry Docker contient les versions 1–5 rejetées.
-La version locale 3 passe le gate de validation mais échoue à l'équité par âge
-sur test indépendant. Elle n'est pas promue et n'est pas transférée au Registry Docker.
-Les modèles `credit-demo-*` acceptés appartiennent exclusivement à la démonstration
-synthétique. Le biais est mesuré et contrôlé selon les métriques décrites sur les
-échantillons évalués ; aucune garantie générale d'absence de discrimination n'est donnée.
+**Statut final : champion Home Credit version 6 accepté et déployé.**
+J'ai évalué une seule fois le candidat figé sur le test v3 : AUC 0,752030,
+DI âge 0,886048 et écart equal opportunity âge 0,061134. Les règles du quality
+gate passent. Les anciennes versions rejetées sont conservées dans le Registry.
+Les modèles `credit-demo-*` restent propres à la démonstration synthétique.
+Je mesure les biais selon les métriques et groupes décrits ici ; aucune garantie
+générale d'absence de discrimination n'en découle.
 
 ## Données, version et préparation
 
@@ -46,10 +48,10 @@ Les identifiants ne sont pas des entrées du modèle. `CODE_GENDER`, `DAYS_BIRTH
 `AGE_YEARS`, `AGE_GROUP` et `EMPLOYED_AGE_RATIO` sont exclus. Âge calculé par
 `-DAYS_BIRTH/365.25`, groupes `<30`, `[30,45)`, `[45,60)`, `60+`.
 Le ratio emploi/âge est calculé et conservé pour l'audit uniquement, conformément
-au choix utilisateur. Les attributs sensibles servent à mesurer l'équité et à
+à mon choix de conception. Les attributs sensibles servent à mesurer l'équité et à
 l'étude des mitigations, pas à l'inférence du candidat retenu.
 
-## Modèle, décision et performance globale
+## Développement initial à 10 % : modèle, décision et performance
 
 Le meilleur modèle de ranking est LightGBM 4.6.0 : 150 arbres, learning rate 0,05,
 15 feuilles, minimum 100 observations par feuille, L2=5 et class_weight=balanced.

@@ -1,5 +1,9 @@
 # Preuves — phase 8
 
+J'ai validé le contrat FastAPI, les explications et le chargement sécurisé des modèles depuis le Registry.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Environnement Windows, `creditS` Python 3.11.9, FastAPI 0.119.0,
 Pydantic 2.12.3, MLflow 3.10.1, SHAP 0.49.1. Aucune installation globale
 ou installation locale d'Airflow.

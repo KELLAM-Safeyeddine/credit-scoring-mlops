@@ -1,5 +1,7 @@
 # Qualification prospective sur de nouveaux clients : protocole v3
 
+J'ai réservé une nouvelle population v3 et fixé les affectations, le budget d'essais et les marges de sélection avant les fits.
+
 Figé le **3 octobre 2026**, `home-credit-independent-v3`. Il suit le rejet de
 l'ensemble au [test v2](ensemble-qualification.md) : AUC conforme, mais DI âge
 0,79575 et écart equal opportunity âge 0,11249 hors limites. Le registre v2
@@ -106,10 +108,10 @@ Pop-Location
 ```
 
 À la clôture de la définition, l'étape suivante prévue était la matérialisation
-des features puis les deux configurations préspécifiées, après validation de
-l'utilisateur. Son exécution est consignée ci-dessous ; le test reste fermé.
+des features puis les deux configurations préspécifiées, après gel du
+plan. Son exécution est consignée ci-dessous ; le test reste fermé.
 
-## Matérialisation après validation de l'utilisateur
+## Matérialisation après gel du plan
 
 La préparation a été exécutée sur les affectations figées. Pandera valide la
 source et le descripteur raw DVC est contrôlé avant export. Les agrégations

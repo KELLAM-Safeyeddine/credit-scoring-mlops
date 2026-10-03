@@ -1,5 +1,9 @@
 # Preuves — phase 12
 
+J'ai documenté l'architecture, les résultats, les commandes de lancement et les limites du modèle.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Validation le 2 octobre 2026 sur Windows dans le venv racine `creditS`
 Python 3.11.9. Les résultats Home Credit et synthétiques sont explicitement séparés.
 

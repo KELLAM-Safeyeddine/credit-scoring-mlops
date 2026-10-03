@@ -1,5 +1,7 @@
 # Livraison et validation finale — 3 octobre 2026
 
+J'ai conservé ici les contrôles de livraison et leur contexte ; les preuves historiques restent distinctes du bilan définitif.
+
 ## État de livraison
 
 La chaîne **DVC → MLflow → Airflow → Docker → FastAPI → Evidently** est
@@ -214,8 +216,9 @@ make down
 ```
 
 Les services restent démarrés à la livraison. La CI GitHub Actions est définie
-mais n'a pas été exécutée sur un runner distant : aucun remote Git n'est
-configuré. La validation ci-dessus est locale, sur cette machine Windows.
+mais n'avait pas encore été exécutée sur un runner distant lors de cette livraison.
+J'ai ensuite publié le projet sur GitHub ; les exécutions distantes sont visibles
+dans l'onglet Actions. La validation ci-dessus est locale, sur cette machine Windows.
 Les limites de population, calibration, proxys et usages sont détaillées dans
 la [Model Card](MODEL_CARD.md).
 [Preuve de l'état final](assets/final-validation/execution.json).

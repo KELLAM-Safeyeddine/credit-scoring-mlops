@@ -1,7 +1,9 @@
 # Projet terminé : champion Home Credit et preuves finales
 
+J'ai terminé le projet en qualifiant le candidat v3 sur son test indépendant, puis en déployant le champion dans l'API Docker.
+
 La chaîne DVC → MLflow → Airflow → Docker → FastAPI → Evidently est livrée.
-Après validation utilisateur, le candidat v3 figé a été évalué **une seule fois**
+Après gel du plan, le candidat v3 figé a été évalué **une seule fois**
 sur son test indépendant, accepté par le quality gate et servi dans l'API Docker.
 Les douze phases et la qualification finale du projet pédagogique sont terminées.
 La démonstration Airflow v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé
@@ -84,8 +86,8 @@ interdisent le transfert d'un candidat non qualifié avant toute mutation cible.
 Les checkpoints, rapports, registre de test et preuves finales sont suivis par
 DVC dans `runtime/v3-ensemble-qualification`, puis poussés au remote local.
 Les modèles binaires et `creditS` restent exclus de Git.
-La CI GitHub est définie mais n'a pas été exécutée à distance : aucun remote Git
-n'est configuré. Les builds et la démonstration antérieurs sont documentés dans
+J'ai défini la CI GitHub et publié le projet sur GitHub après cette clôture locale.
+Son statut distant est consultable dans l'onglet Actions du dépôt. Les builds et la démonstration antérieurs sont documentés dans
 le [bilan de livraison](final-validation.md), sans les présenter comme réexécutés ici.
 
 Le score est non calibré, la validation a servi à plusieurs études, et les

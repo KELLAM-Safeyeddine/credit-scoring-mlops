@@ -1,5 +1,7 @@
 # Ensemble figé : SHAP et plan de qualification
 
+J'ai figé l'ensemble retenu en développement v2, vérifié ses explications SHAP et réservé une seule évaluation indépendante.
+
 Le 3 octobre 2026, le candidat issu du [développement de capacité](constrained-capacity-development.md)
 est empaqueté sans nouvel entraînement ni recherche de seuil. Le test v2 reste
 fermé. Le contrôle sur validation et les preuves SHAP passent ; le gate de
@@ -96,7 +98,7 @@ python -m ruff check .
 Get-Content runtime/ensemble-qualification/execution.json
 ```
 
-La prochaine étape, après validation de l'utilisateur, est l'évaluation unique :
+Après le gel du plan, j'ai exécuté l'évaluation unique avec la commande suivante :
 
 ```powershell
 .\creditS\Scripts\Activate.ps1
@@ -106,9 +108,9 @@ python -m src.models.qualify_holdout --params runtime/ensemble-qualification/par
 Cette dernière commande **n'a pas été exécutée à cette étape**. La réussite du
 test et du gate complet sera nécessaire avant toute promotion.
 
-## Évaluation indépendante exécutée après validation de l'utilisateur
+## Évaluation indépendante après gel du plan
 
-L'étape suivante a été autorisée puis exécutée le **3 octobre 2026**.
+J'ai exécuté l'évaluation indépendante le **3 octobre 2026**, après le gel du plan.
 Les constats « test fermé » et « registre absent » ci-dessus décrivent la
 clôture de la préparation, avant cette évaluation. Le manifeste et
 `execution.json` restent les preuves historiques du gel ; ils ne sont pas

@@ -1,5 +1,7 @@
 # Qualification Home Credit — recherche complémentaire
 
+J'ai conservé les campagnes de qualification et leurs rejets pour documenter la sélection sans assouplir le gate.
+
 Campagne du 2 octobre 2026 : 18 essais LightGBM, six configurations et trois
 puissances de repondération (1,0 ; 1,25 ; 1,5), avec `sample_frac=0.1`.
 Les 14 760 observations de train et 4 920 de validation restent identiques

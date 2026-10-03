@@ -1,5 +1,9 @@
 # Preuves — phase 11
 
+J'ai complété les tests, préparé la CI et exécuté la démonstration de la boucle de réentraînement.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Validation exécutée sur Windows dans `creditS` Python 3.11.9, avec Docker Linux,
 MLflow 3.10.1, Airflow 2.11.0, Evidently 0.7.20, Fairlearn 0.13.0 et SHAP 0.49.1.
 

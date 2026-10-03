@@ -1,5 +1,9 @@
 # Phase 4 — Expérimentation MLflow
 
+J'ai comparé les familles de modèles sur les mêmes splits et enregistré les expériences dans MLflow.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Validation exécutée le 2 octobre 2026, Windows, Python 3.11.9 dans `creditS`.
 MLflow 3.10.1, scikit-learn 1.7.2, LightGBM 4.6.0, XGBoost 3.0.5.
 La signature de `mlflow.sklearn.log_model` et les options du serveur ont été

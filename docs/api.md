@@ -1,5 +1,7 @@
 # API FastAPI — phase 8
 
+J'ai conçu l'API pour servir uniquement un champion accepté et fournir des explications cohérentes avec le modèle chargé.
+
 Le service charge exclusivement l'alias `credit-scoring@champion`. Il vérifie
 le tag accepté, le résultat du gate, ses règles, le run terminé, les artefacts
 SHAP, l'encodeur, l'ordre des colonnes et le seuil du modèle MLflow 3.10.1.
@@ -39,9 +41,10 @@ Invoke-RestMethod http://localhost:8000/predict -Method Post -ContentType applic
 Invoke-RestMethod http://localhost:8000/explain -Method Post -ContentType application/json -Body $payload
 ```
 
-**État actuel : aucun champion accepté dans les Registry réels.** Ces appels
-répondent 503 jusqu'à une promotion valide. Le service démarre néanmoins et
-peut recevoir une demande de rechargement après promotion. `/docs` reste accessible.
+**État final : j'ai chargé le champion Home Credit version 6 dans l'API Docker.**
+J'ai vérifié `/health`, `/predict` et `/explain` avec des réponses 200. Sur une
+installation neuve, le scoring reste à 503 jusqu'au chargement d'un champion valide.
+`/docs` reste accessible même sans modèle prêt.
 
 ## Contrat et explications
 

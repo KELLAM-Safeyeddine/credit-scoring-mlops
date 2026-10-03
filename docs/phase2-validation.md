@@ -1,5 +1,9 @@
 # Phase 2 — données et DVC
 
+J'ai extrait et validé les données, puis mis en place leur suivi DVC et un premier pipeline reproductible.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 L'archive de la racine a été extraite vers data/raw. Elle contient huit tables
 opérationnelles, le dictionnaire HomeCredit_columns_description.csv et le fichier
 optionnel sample_submission.csv. Les neuf CSV requis sont vérifiés avant extraction.

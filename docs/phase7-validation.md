@@ -1,5 +1,9 @@
 # Validation exécutée — phase 7
 
+J'ai exécuté les DAGs Airflow et vérifié les branches de promotion et de rejet.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Date : 2 octobre 2026. Hôte Windows / PowerShell, Python local 3.11.9 dans
 `creditS`, Docker Linux et Docker Compose. Airflow n'est pas installé dans le venv
 local. Le worker Docker affiche `sys.prefix = /opt/creditS`.

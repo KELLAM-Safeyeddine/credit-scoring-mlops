@@ -1,5 +1,9 @@
 # Phase 1 — initialisation
 
+J'ai initialisé le dépôt et l'environnement `creditS`, puis vérifié les dépendances et les outils de développement.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 ## Choix
 
 - Windows PowerShell, Python 3.11.9 (runtime local signe PSF), environnement racine `creditS`.
@@ -7,7 +11,7 @@
 - Dépendances directes épinglées ; contraintes transitives Windows sauvegardées
   après installation et réutilisées par `make setup`.
 - GNU Make installé dans le venv via gnumake, sans modification système.
-- Le plan joint est une référence ; les instructions de la demande priment.
+- J'ai suivi le plan du projet et documenté les choix de mise en œuvre.
 - Aucun CSV extrait ni pipeline métier implémenté pendant cette phase.
 
 ## Vérifications

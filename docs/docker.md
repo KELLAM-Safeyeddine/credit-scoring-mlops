@@ -1,5 +1,7 @@
 # Packaging Docker — phase 9
 
+J'ai empaqueté l'API et Airflow dans des images distinctes, avec une stack Compose et des volumes persistants.
+
 ## Lancer et vérifier sous Windows
 
 ```powershell
@@ -63,9 +65,10 @@ nécessite aussi l'accès à l'image de base et aux paquets système Debian.
 cette disponibilité du processus. `/health` exprime la disponibilité du scoring :
 200 avec un champion vérifié, 503 sans champion accepté.
 
-**Le Registry Home Credit contient actuellement quatre versions rejetées et aucun
-champion.** La stack est donc saine, mais les routes de scoring de l'API principale
-répondent 503. Aucune promotion artificielle n'est faite pour obtenir un health 200.
+**J'ai désormais déployé le champion Home Credit version 6 dans le Registry Docker.**
+J'ai vérifié la santé de la stack et les routes de scoring avec des réponses 200.
+Sur une installation neuve, le scoring reste à 503 tant qu'un champion valide
+n'est pas chargé ; je n'ai pas contourné le gate pour obtenir une réponse 200.
 Après une promotion valide, utiliser le rechargement décrit dans `docs/api.md`.
 Une mise à jour du code nécessite une reconstruction ; les modèles sont chargés
 depuis le Registry, sans être intégrés à l'image.

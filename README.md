@@ -1,68 +1,53 @@
 # Scoring de crédit explicable et équité mesurée
 
-Projet pédagogique Home Credit Default Risk : versionner les données, comparer
-les modèles, mesurer leurs biais, appliquer un quality gate avant promotion,
-servir des explications SHAP et déclencher un réentraînement sur alerte.
+[![CI](https://github.com/KELLAM-Safeyeddine/credit-scoring-mlops/actions/workflows/ci.yml/badge.svg)](https://github.com/KELLAM-Safeyeddine/credit-scoring-mlops/actions/workflows/ci.yml)
 
-**DVC → MLflow → Airflow → Docker → FastAPI → Evidently.**
-Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
-La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
-et API rechargée est exécutée sur un scénario synthétique séparé.
+J'ai construit ce projet MLOps sur Home Credit Default Risk pour entraîner un
+modèle de scoring, expliquer ses prédictions et mesurer les écarts entre groupes
+avant de promouvoir un candidat.
 
-**Projet pédagogique terminé le 3 octobre 2026 : 160 tests passent et le
-champion Home Credit version 6 est déployé dans l'API Docker.** Le candidat
-figé passe le quality gate sur 19 681 clients de test indépendants : AUC
-**0,75203**, DI âge **0,88605**, écart equal opportunity âge **0,06113**.
-Les biais sont mesurés et contrôlés selon ces métriques et les règles du projet.
-Le score reste non calibré ; cette qualification ne valide pas un usage bancaire.
-[Résultats définitifs et preuves](docs/project-completion.md).
+J'ai utilisé la chaîne **DVC → MLflow → Airflow → Docker → FastAPI → Evidently**.
+Fairlearn fournit les audits et les méthodes de mitigation ; Pandera contrôle les données.
 
-[Bilan de livraison et vérifications finales](docs/final-validation.md) :
-démonstration complète rejouée, services vérifiés et limite de qualification
-Home Credit explicitement conservée.
-Contrôle de livraison précédent : **153 tests**, images reconstruites, scénario Airflow
-`cb451a6031e6` réussi et API rechargée sur v3 synthétique. La qualification
-Home Credit reste non obtenue ; l'API principale conserve `/health` à 503.
+## Résultat final
 
-Ce contrôle décrit l'état antérieur à la qualification finale : l'API principale
-répond maintenant `/health` **200**, sert le champion 6, et renvoie trois raisons
-SHAP. Les campagnes historiques ci-dessous restent conservées pour traçabilité ;
-elles ne décrivent pas l'état actuel du déploiement.
+J'ai qualifié le candidat v3 sur **19 681 clients de test indépendants**, au seuil
+figé de **0,397**, puis déployé le **champion Home Credit version 6** dans l'API Docker.
 
-Une [étude Fairlearn à coûts métier](docs/constrained-development.md) examine
-quatre entraînements contraints et huit scores déterministes sur le développement.
-Le point respectant l'équité atteint une AUC de 0,73665, sous le minimum de 0,74.
-Aucun point de cette campagne ne passe toutes les règles. Le test v2 a depuis
-été évalué une seule fois sur l'ensemble figé : rejet pour équité par âge.
+| Mesure sur le test indépendant | Résultat |
+|---|---:|
+| AUC | **0,75203** |
+| DI d'acceptation par âge | **0,88605** |
+| Écart equal opportunity par âge | **0,06113** |
+| DI d'acceptation par genre | **0,96373** |
+| Écart equal opportunity par genre | **0,02035** |
 
-L'[étude de capacité Fairlearn](docs/constrained-capacity-development.md) ultérieure
-trouve un ensemble déterministe passant le screening de développement : AUC
-0,74725, DI âge 0,80968, EO âge 0,09605. L'instantané est figé et vérifié après
-rechargement. Les explications SHAP ont ensuite été vérifiées et le test unique
-exécuté selon un plan figé : AUC 0,74159, DI âge 0,79575, EO âge 0,11249.
-**Il est rejeté et non promu**. Le test v2 est désormais fermé à la sélection.
-[Rapport de qualification](docs/ensemble-qualification.md).
-Le [protocole v3 sur des clients inutilisés](docs/protocol-v3.md) est exécuté :
-deux configurations Fairlearn, trois tentatives dont une reprise numérique.
-Les AUC 0,74105 et 0,74073 passent le minimum de production 0,74 mais restent
-sous la marge de sélection préspécifiée 0,745. Aucun candidat retenu, test fermé.
+Le quality gate accepte le candidat. J'ai vérifié les prédictions, les trois raisons
+SHAP, le rechargement de l'API et la traçabilité du modèle. **160 tests passent**,
+Ruff est conforme et les cinq services Docker sont sains. Le score reste non
+calibré : ce résultat pédagogique ne constitue pas une validation bancaire.
+[Bilan définitif et preuves](docs/project-completion.md) · [Model Card](docs/MODEL_CARD.md).
 
-Une [étude de développement séparée à quinze feuilles](docs/v3-refinement-development.md)
-réutilise uniquement le train et la validation v3. Sur ses deux fits préspécifiés,
-le modèle à 500 arbres passe les marges de sélection : AUC 0,75151, DI âge
-0,85203 et écart EO âge 0,06507. Son instantané est vérifié après rechargement ;
-**154 tests passent**. Il reste un candidat de développement : SHAP et qualification
-indépendante sont encore nécessaires, test v3 intact et aucun champion promu.
+## Démarche et traçabilité
 
-Les [preuves SHAP et le plan figé v3](docs/v3-ensemble-qualification.md) sont
-désormais préparés : neuf oracles, 400 observations expliquées, reconstruction
-à 3,11 × 10⁻⁹. Le gate validation + SHAP passe, mais la promotion reste bloquée
-pour test indépendant non évalué. Le test v3 reste intact ; **158 tests passent**.
+J'ai comparé plusieurs familles de modèles et conservé les campagnes rejetées.
+Les candidats initiaux montraient soit une AUC insuffisante, soit des écarts
+d'équité par âge au-delà des limites. Je n'ai pas assoupli le gate pour les promouvoir.
 
-Après autorisation finale, l'évaluation v3 unique passe et le champion est
-promu sur MLflow local (5000), puis transféré via les API MLflow au Registry
-Docker (5001), sans réévaluer le test. L'API principale 8000 le recharge et ses
-scores sont identiques au modèle qualifié. **160 tests passent**.
+L'[ensemble v2](docs/ensemble-qualification.md) a échoué sur son test indépendant
+(AUC 0,74159, DI âge 0,79575, écart EO âge 0,11249). J'ai fermé ce test à la
+sélection et réservé une population distincte pour le [protocole v3](docs/protocol-v3.md).
+Une [étude séparée à quinze feuilles](docs/v3-refinement-development.md) a ensuite
+produit le candidat final. J'ai figé ses [preuves SHAP et son plan](docs/v3-ensemble-qualification.md)
+avant l'évaluation unique du test v3.
+
+J'ai également exécuté la boucle v1 accepté → drift → v2 discriminatoire rejeté
+→ v3 mitigé accepté → API rechargée sur un scénario synthétique distinct.
+Cette [démonstration Airflow](docs/demo.md) vérifie les transitions du système ;
+je la distingue des résultats mesurés sur Home Credit.
+
+Les [rapports de livraison](docs/final-validation.md) et de phases décrivent
+les états historiques. Le bilan définitif présente l'état du champion déployé.
 
 ## Architecture
 
@@ -158,7 +143,8 @@ peuvent donc être healthy sans modèle prêt au scoring.
 | MLflow local, démarré par `make mlflow` | http://localhost:5000 |
 
 Les identifiants Airflow sont dans `.env`. Les deux serveurs MLflow ont des bases
-indépendantes ; Docker reçoit une copie initiale de la base locale si elle existe.
+indépendantes. J'ai transféré le champion final par les API MLflow, sans copier
+une base SQLite vivante.
 DVC restaure les fichiers, **pas** les bases MLflow ni leurs runs.
 Le remote résolu ici est le dossier frère `../dvc-storage` ; `../../dvc-storage`
 dans `.dvc/config` est relatif au dossier `.dvc`. Pour changer de remote,
@@ -266,7 +252,8 @@ make down
 
 La CI GitHub Actions crée `.ci-venv`, installe `requirements.txt`, exécute Ruff
 et pytest avec fixtures générées, puis construit API et Airflow sans Kaggle.
-Aucun remote Git n'est configuré ici : la CI distante reste à exécuter.
+Le dépôt GitHub déclenche ce workflow à chaque push ; son statut est disponible
+dans l'onglet Actions. Les résultats locaux sont consignés dans le bilan définitif.
 `make down` conserve les volumes et les bases.
 
 Ce dépôt ne fournit pas de PD calibrées, de validation temporelle indépendante,

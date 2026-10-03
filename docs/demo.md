@@ -1,5 +1,7 @@
 # Démonstration de la boucle fermée
 
+J'ai utilisé une démonstration synthétique pour vérifier la boucle de drift, réentraînement, rejet, mitigation et rechargement de l'API.
+
 `make demo` déroule une boucle réelle DVC → MLflow → Airflow → Docker/FastAPI
 → Evidently, sur des **données synthétiques**. Elle prouve les transitions du
 système ; elle ne qualifie pas un modèle Home Credit. Le candidat Home Credit
@@ -95,7 +97,6 @@ Les actions [checkout](https://github.com/actions/checkout) et
 résolus de leurs versions v6. Les tests locaux imposent `creditS` ; seule
 l'exécution GitHub Actions attend `.ci-venv`. Airflow reste absent de ce venv.
 
-Aucun remote Git n'est encore configuré : le workflow est prêt et ses commandes
-Ruff/pytest/build ont été exécutées localement. Aucun résultat GitHub Actions
-distant n'est revendiqué. La démonstration Airflow complète est une validation
+J'ai exécuté localement les commandes Ruff/pytest/build. Le workflow est maintenant
+publié dans le dépôt GitHub et son statut distant est consultable dans Actions. La démonstration Airflow complète est une validation
 locale d'intégration ; elle n'est pas exécutée dans la CI légère.

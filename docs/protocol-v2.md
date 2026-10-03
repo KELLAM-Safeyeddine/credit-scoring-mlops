@@ -1,7 +1,9 @@
 # Protocole prospectif Home Credit v2
 
+J'ai défini le protocole v2 pour séparer les nouveaux clients des campagnes précédentes et figer la sélection avant entraînement.
+
 Figé le **3 octobre 2026**, identifiant `home-credit-independent-v2`.
-Les six essais préspécifiés ont été exécutés après validation utilisateur.
+Les six essais préspécifiés ont été exécutés après gel du plan.
 Aucun candidat ne franchit les contraintes de validation ; aucun résultat
 prédictif du nouveau test n'a été consulté. Les règles ci-dessous sont celles
 figées avant l'entraînement et n'ont pas été modifiées après les résultats.
@@ -63,7 +65,7 @@ Les seuils restent inchangés : AUC ≥ 0,74 ; DI ≥ 0,8 et écart EO ≤ 0,10 
 genre et âge ; supports ≥ 100 dossiers et ≥ 20 de chaque classe par groupe ;
 recall ≥ 0,50, acceptation entre 0,10 et 0,95. Le gate exige aussi SHAP et une
 inférence déterministe sans groupe sensible. La comparaison au champion éventuel
-requiert les mêmes données de validation. Le Registry n'a actuellement aucun champion.
+requiert les mêmes données de validation. À la clôture de cette campagne, le Registry n'avait aucun champion.
 
 ## Fichiers et contrôles
 

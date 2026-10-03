@@ -1,5 +1,7 @@
 # Surveillance des lots
 
+J'ai construit les scénarios de surveillance avec un modèle diagnostique figé, puis vérifié séparément les événements API du champion final.
+
 Le monitoring utilise Evidently **0.7.20**, Fairlearn **0.13.0** et les mêmes
 fonctions métier en local et dans le DAG Airflow. Le modèle de diagnostic est
 `artifacts/fairness_models/candidate.pkl`, figé, avec son seuil 0,55 et son run

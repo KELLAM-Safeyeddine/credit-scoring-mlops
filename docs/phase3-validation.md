@@ -1,5 +1,9 @@
 # Phase 3 — nettoyage et features
 
+J'ai construit les features métier et historiques, avec des splits alignés et des transformations ajustées sur le train uniquement.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 ## Contrat final
 
 261 colonnes ordonnées : 122 numériques et 139 indicateurs catégoriels issus de
@@ -7,7 +11,7 @@
 validation, test et production. feature_columns.json conserve l'ordre exact ;
 feature_encoder.pkl et category_vocabulary.json conservent l'encodage appris.
 
-Le choix utilisateur réserve strictement l'âge à l'audit : EMPLOYED_AGE_RATIO
+J'ai réservé strictement l'âge à l'audit : EMPLOYED_AGE_RATIO
 est calculé et exporté dans sensitive_*.csv, puis exclu du modèle avec
 CODE_GENDER, DAYS_BIRTH, AGE_YEARS et AGE_GROUP. TARGET et SK_ID_CURR ne sont
 jamais des features. Le ratio âge/emploi reste disponible pour l'analyse.

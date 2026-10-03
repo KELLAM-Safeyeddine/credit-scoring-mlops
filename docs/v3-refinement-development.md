@@ -1,5 +1,7 @@
 # Étude de développement v3 à quinze feuilles
 
+J'ai mené une étude de développement séparée sur les données v3 pour augmenter la capacité du modèle sous contraintes Fairlearn.
+
 Deux configurations supplémentaires, déclarées avant leurs fits, utilisent
 uniquement le train et la validation v3 : 59 041 / 19 681 clients et 264 features.
 La campagne prospective v3 initiale reste close sans candidat. Cette étude est
@@ -80,5 +82,5 @@ python -m ruff check .
 python -m dvc status
 ```
 
-La prochaine étape est le packaging de l'ensemble, les preuves SHAP et le gel
-d'un plan d'évaluation unique avant toute ouverture du test v3.
+J'ai ensuite empaqueté l'ensemble, produit les preuves SHAP et figé un plan
+d'évaluation unique avant l'ouverture du test v3.

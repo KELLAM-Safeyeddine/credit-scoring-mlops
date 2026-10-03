@@ -1,5 +1,7 @@
 # Étude de développement Fairlearn à coûts métier
 
+J'ai comparé les contraintes Fairlearn et les scores déterministes avec les coûts métier fixés avant les entraînements.
+
 Cette étude exploratoire suit les six essais clos du protocole v2. Elle utilise
 uniquement ses 44 281 lignes d'entraînement et 14 760 lignes de validation,
 avec le contrat de 263 features. Elle ne constitue pas une extension des six

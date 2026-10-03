@@ -1,5 +1,7 @@
 # Développement : capacité des réductions Fairlearn
 
+J'ai étudié une augmentation de capacité des oracles Fairlearn sur le développement v2, sans utiliser le test pour choisir le modèle.
+
 Cette étude suit les quatre ajustements de l'[étude initiale](constrained-development.md).
 Son meilleur point respectant l'équité avait AUC 0,73665, sous 0,74.
 Le budget de la nouvelle étude est fixé **avant entraînement à deux ajustements**,
@@ -81,8 +83,8 @@ remote commun ; le binaire n'est pas versionné dans Git.
 [Définition préalable](assets/constrained-capacity-development/definition.json),
 [rapport complet](assets/constrained-capacity-development/report.json),
 [preuve d'exécution](assets/constrained-capacity-development/execution.json).
-La prochaine étape doit produire les explications SHAP adaptées à la moyenne
-de sept modèles LightGBM et figer un plan de qualification avant toute évaluation de test.
+J'ai ensuite produit les explications SHAP adaptées à la moyenne de sept modèles
+LightGBM et figé un plan de qualification avant l'évaluation du test v2.
 
 ## Configuration et vérification
 

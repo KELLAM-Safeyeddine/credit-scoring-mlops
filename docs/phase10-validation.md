@@ -1,5 +1,9 @@
 # Preuves — phase 10
 
+J'ai vérifié les rapports Evidently et les alertes des huit scénarios de production simulée.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Exécutions sur Windows, dans `creditS` Python 3.11.9, avec Evidently 0.7.20
 et Fairlearn 0.13.0. Airflow 2.11.0 reste exclusivement dans Docker.
 

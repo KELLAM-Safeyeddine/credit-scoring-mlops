@@ -1,5 +1,9 @@
 # Phase 6 — Quality gate et Registry
 
+J'ai ajouté un quality gate et vérifié que le Registry ne promeut que les candidats respectant toutes les règles.
+
+Ce compte rendu décrit les vérifications de cette phase au moment de son exécution. Le [bilan définitif](project-completion.md) présente le champion final et les dernières validations.
+
 Exécutée dans `creditS`, Python 3.11.9, MLflow 3.10.1. Signatures et documentation
 installée du client vérifiées, puis appels REST réels et Registry SQLite de test
 exécutés. Les alias sont utilisés ; les stages historiques MLflow ne le sont pas.
