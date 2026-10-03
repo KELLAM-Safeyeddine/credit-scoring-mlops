@@ -1,0 +1,41 @@
+{
+  "checkpoint_active_oracles": 9,
+  "checkpoint_validation_metrics_reproduced": true,
+  "checks": {
+    "pytest_passed": 153,
+    "pytest_seconds": 48.54,
+    "ruff_passed": true
+  },
+  "failed_run_id": "8c0617f7198b4ebea66ced05962ad3d9",
+  "fit_attempts": 3,
+  "home_credit_aliases": {},
+  "original_v2_ledger_unchanged": true,
+  "protocol_id": "home-credit-independent-v3",
+  "selected_candidate": null,
+  "status": "no_eligible_deterministic_score",
+  "successful_runs": [
+    {
+      "best_gap": 0.011328377181996238,
+      "oracle_calls": 44.0,
+      "run_id": "1f589efd597d44e7a4cd3f918a347908",
+      "status": "FINISHED",
+      "training_seconds": 298.48157360000005
+    },
+    {
+      "best_gap": 0.011517890587499233,
+      "oracle_calls": 44.0,
+      "run_id": "11a588a834e3474e8697fe39c2fc0363",
+      "status": "FINISHED",
+      "training_seconds": 168.08998780000002
+    }
+  ],
+  "technical_retry_same_params_and_input_hashes": true,
+  "test_evaluated": false,
+  "test_ledger_absent": true,
+  "training_configurations": 2,
+  "versions": {
+    "fairlearn": "0.13.0",
+    "lightgbm": "4.6.0",
+    "mlflow": "3.10.1"
+  }
+}

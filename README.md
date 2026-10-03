@@ -9,7 +9,7 @@ Fairlearn audite et compare les mitigations ; Pandera contrôle les données.
 La boucle v1 accepté → drift → v2 discriminatoire rejeté → v3 mitigé accepté
 et API rechargée est exécutée sur un scénario synthétique séparé.
 
-**État vérifié le 3 octobre 2026 : 149 tests passent, builds Docker réussis,
+**État vérifié le 3 octobre 2026 : 153 tests passent, builds Docker réussis,
 démonstration Airflow complète vérifiée. Aucun champion Home Credit accepté.**
 Un candidat repondéré par âge passe le gate de validation avec une AUC de 0,74113,
 mais échoue à l'équité par âge sur le test indépendant : AUC 0,74618, DI 0,79692,
@@ -33,9 +33,10 @@ rechargement. Les explications SHAP ont ensuite été vérifiées et le test uni
 exécuté selon un plan figé : AUC 0,74159, DI âge 0,79575, EO âge 0,11249.
 **Il est rejeté et non promu**. Le test v2 est désormais fermé à la sélection.
 [Rapport de qualification](docs/ensemble-qualification.md).
-Un [protocole v3 sur des clients inutilisés](docs/protocol-v3.md) est désormais
-figé : deux fits Fairlearn préspécifiés, marges de sélection sur validation,
-zéro chevauchement avec les campagnes antérieures ; aucun entraînement exécuté.
+Le [protocole v3 sur des clients inutilisés](docs/protocol-v3.md) est exécuté :
+deux configurations Fairlearn, trois tentatives dont une reprise numérique.
+Les AUC 0,74105 et 0,74073 passent le minimum de production 0,74 mais restent
+sous la marge de sélection préspécifiée 0,745. Aucun candidat retenu, test fermé.
 
 ## Architecture
 

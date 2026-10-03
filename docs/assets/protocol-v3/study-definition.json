@@ -1,0 +1,95 @@
+{
+  "costs": {
+    "fn": 0.9090909090909091,
+    "fp": 0.09090909090909091
+  },
+  "development_only": true,
+  "fits": 2,
+  "score_variants": 2,
+  "selection_margin": {
+    "max_equal_opp_diff": 0.075,
+    "min_auc": 0.745,
+    "min_disparate_impact": 0.85
+  },
+  "settings": {
+    "adaptive_trials_permitted": false,
+    "diagnostic_score_mode": "hard_vote_not_eligible",
+    "difference_bound": 0.01,
+    "eps": 0.005,
+    "max_trials": 2,
+    "method": "Fairlearn ExponentiatedGradient",
+    "protocol_manifest": "runtime/protocol-v3/protocol.json",
+    "require_independent_test": true,
+    "selection_rule": "among both-gender-and-age margin passes: max validation AUC; ties: max recall then trial order",
+    "selection_score_mode": "probability_average",
+    "snapshot_root": "runtime/protocol-v3",
+    "test_evaluations_permitted": 1,
+    "threshold_source": "validation only; global threshold fixed before test",
+    "trials": [
+      {
+        "constraint": "EqualizedOdds",
+        "lightgbm": {
+          "learning_rate": 0.05,
+          "min_child_samples": 100,
+          "n_estimators": 300,
+          "n_jobs": 4,
+          "num_leaves": 7,
+          "reg_lambda": 5.0
+        },
+        "max_iter": 15,
+        "name": "eo-intersection-300-leaves7",
+        "scope": "intersection"
+      },
+      {
+        "constraint": "EqualizedOdds",
+        "lightgbm": {
+          "learning_rate": 0.03,
+          "min_child_samples": 120,
+          "n_estimators": 500,
+          "n_jobs": 4,
+          "num_leaves": 7,
+          "reg_lambda": 10.0
+        },
+        "max_iter": 15,
+        "name": "eo-intersection-500-leaves7",
+        "scope": "intersection"
+      }
+    ],
+    "validation_selection_margin": {
+      "max_equal_opp_diff": 0.075,
+      "min_auc": 0.745,
+      "min_disparate_impact": 0.85
+    }
+  },
+  "source_protocol": "home-credit-independent-v3",
+  "trials": [
+    {
+      "constraint": "EqualizedOdds",
+      "lightgbm": {
+        "learning_rate": 0.05,
+        "min_child_samples": 100,
+        "n_estimators": 300,
+        "n_jobs": 4,
+        "num_leaves": 7,
+        "reg_lambda": 5.0
+      },
+      "max_iter": 15,
+      "name": "eo-intersection-300-leaves7",
+      "scope": "intersection"
+    },
+    {
+      "constraint": "EqualizedOdds",
+      "lightgbm": {
+        "learning_rate": 0.03,
+        "min_child_samples": 120,
+        "n_estimators": 500,
+        "n_jobs": 4,
+        "num_leaves": 7,
+        "reg_lambda": 10.0
+      },
+      "max_iter": 15,
+      "name": "eo-intersection-500-leaves7",
+      "scope": "intersection"
+    }
+  ]
+}

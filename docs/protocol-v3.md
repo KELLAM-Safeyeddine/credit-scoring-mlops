@@ -105,5 +105,143 @@ Push-Location runtime/protocol-v3
 Pop-Location
 ```
 
-La prochaine étape, après validation de l'utilisateur, matérialisera les features
-et exécutera uniquement les deux fits préspécifiés. Elle laissera le test fermé.
+À la clôture de la définition, l'étape suivante prévue était la matérialisation
+des features puis les deux configurations préspécifiées, après validation de
+l'utilisateur. Son exécution est consignée ci-dessous ; le test reste fermé.
+
+## Matérialisation après validation de l'utilisateur
+
+La préparation a été exécutée sur les affectations figées. Pandera valide la
+source et le descripteur raw DVC est contrôlé avant export. Les agrégations
+bureau, previous_application et installments_payments portent sur les 123 004
+clients, avec cutoff au jour 0 et traitement des historiques par chunks.
+L'encodeur apprend le vocabulaire sur train seulement. Le contrat v3 compte
+**264 features**, identiques entre les quatre splits ; il est distinct du
+contrat v2 de 263 colonnes. L'imputation reste ajustée sur train au moment du fit.
+
+Les fichiers de test sont matérialisés pour conserver un contrat reproductible,
+sans calcul de scores ni audit prédictif sur le test. Genre, âge et ratio
+emploi/âge sont exportés séparément pour l'audit et exclus des features.
+
+- Interim : `cebb8a3b1eea9bf44cbe11b058542c17.dir`, quatre CSV, 69 354 699 octets.
+- Processed : `fdec4513d9be07de9abdfe5a2d89130c.dir`, seize fichiers,
+  145 819 983 octets.
+
+Les snapshots sont suivis par DVC dans `runtime/protocol-v3` et poussés au
+remote commun : 22 objets supplémentaires, dont les deux manifestes de répertoire.
+La preuve de préparation et les descripteurs sont archivés avec le protocole.
+
+Le runner applique les marges uniquement à la sélection : il ne réécrit pas
+les limites du quality gate dans la configuration figée. Il vérifie que le
+plan utilisé est exactement celui du protocole, refuse un budget différent,
+et interdit au vote binaire diagnostique d'être retenu. Le choix final suit
+AUC, recall puis ordre stable des essais. Aucun résultat de test ne participe
+à ce choix. Les nouveaux tests couvrent ces invariants.
+
+Validation du code : **152 tests réussis en 104,48 secondes**, 41 avertissements
+de dépendances ; Ruff conforme et 97 fichiers Python formatés.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m pytest -q
+python -m ruff check .
+Get-Content runtime/protocol-v3/preparation_execution.json
+```
+
+Les commandes de première exécution utilisées sont :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m src.data.prepare_protocol --params runtime/protocol-v3/params.yaml
+python -m src.features.build_features --params runtime/protocol-v3/params.yaml
+python -m src.models.constrained_study --protocol runtime/protocol-v3/params.yaml --output runtime/protocol-v3/constrained-study
+```
+
+Le runner refuse d'écraser une étude existante ; ces commandes sont documentées
+pour la reproductibilité et ne demandent pas de refaire la campagne terminée.
+
+## Résultats des deux configurations
+
+| Essai / score | AUC validation | DI âge | EO âge | Sélection v3 |
+|---|---:|---:|---:|---|
+| 300 arbres / probabilités | 0,741046 | 0,922616 | 0,063670 | Échec marge AUC |
+| 500 arbres / probabilités | 0,740729 | 0,921256 | 0,057848 | Échec marge AUC |
+| 300 arbres / vote | 0,717971 | 0,863622 | 0,050396 | Diagnostic non admissible |
+| 500 arbres / vote | 0,721588 | 0,865488 | 0,073997 | Diagnostic non admissible |
+
+Les deux scores probabilistes respectent les **règles numériques de production**
+sur validation, dont AUC ≥ 0,74. Ils ne respectent pas la **marge de sélection
+préspécifiée AUC ≥ 0,745** : ce résultat n'est pas présenté comme un échec
+du minimum AUC du quality gate. Aucune règle n'est modifiée après observation
+des résultats. **Aucun candidat n'est retenu**, aucun SHAP de qualification
+supplémentaire n'est produit, aucun Registry n'est modifié et le test v3
+reste fermé. Le statut final est `no_eligible_deterministic_score`.
+
+Le premier score probabiliste utilise le seuil 0,494 : DI genre 0,997318,
+EO genre 0,013395, recall 0,679043 et acceptation 0,657741.
+Le second utilise 0,507 : DI genre 0,994150, EO genre 0,023603,
+recall 0,668345 et acceptation 0,669072. Les audits vérifient aussi les supports.
+Le biais est mesuré selon ces métriques ; ces résultats de validation
+ne prouvent pas une qualification indépendante ni un usage bancaire.
+
+Les deux runs exploités sont `FINISHED`, dans MLflow 3.10.1, expérience
+`credit-scoring-constrained-development` :
+
+- 300 arbres : `1f589efd597d44e7a4cd3f918a347908`, 44 appels aux oracles,
+  environ 298,48 secondes, best_gap 0,01133.
+- 500 arbres : `11a588a834e3474e8697fe39c2fc0363`, 44 appels aux oracles,
+  environ 168,09 secondes, best_gap 0,01152.
+
+Les best_gap restent supérieurs à `eps=0.005` au terme du budget externe
+de quinze tours : cette étude ne prétend pas avoir atteint la précision
+d'optimisation demandée. Le budget n'est pas augmenté après les résultats.
+Le lock DVC racine loggé est un snapshot historique ; `processed.dvc` et
+les SHA256 des entrées train/val identifient les données v3 effectivement utilisées.
+
+### Incident numérique et reprise documentée
+
+L'exécution initiale du second fit, run `8c0617f7198b4ebea66ced05962ad3d9`,
+a terminé l'entraînement mais échoué lors du calcul des métriques, car une
+moyenne pondérée pouvait produire une valeur supérieure à 1 par arrondi.
+Le run demeure `FAILED` dans MLflow. La correction borne seulement la moyenne
+finale à [0,1] dans la tolérance 10⁻¹² ; les probabilités invalides d'un oracle
+sont toujours rejetées. Le test de régression reproduit exactement
+`1.0000000000000002` avant correction et vérifie également ce refus.
+
+Il y a donc **deux configurations distinctes et trois tentatives de fit**, dont
+une reprise technique du second essai. Les paramètres, seed et SHA256 des
+entrées sont identiques entre le run échoué et sa reprise ; aucun nouveau
+profil ni candidat adaptatif n'est ajouté. Le premier résultat est conservé.
+La reprise vérifie le statut `FAILED`, le nom du fit et ses paramètres avant
+de repartir, et n'autorise qu'une reprise technique dans ce dossier.
+
+Un checkpoint du second fit est désormais écrit immédiatement après
+l'entraînement et avant l'évaluation : neuf oracles actifs, imputation et
+contrat des colonnes, **4 259 919 octets**. Il permet de récupérer le résultat
+d'ajustement après un incident ; **il n'est pas un candidat sélectionné**.
+Les métriques ont été recalculées depuis ce checkpoint sur les 19 681 lignes
+de validation et sont exactement identiques au rapport et aux logs MLflow.
+Le binaire est conservé par DVC et exclu de Git.
+Les preuves de préparation, de clôture et le répertoire d'étude sont ajoutés au
+snapshot DVC : **12 objets supplémentaires poussés**, statut du dépôt isolé propre.
+
+[Définition exécutée](assets/protocol-v3/study-definition.json),
+[rapport complet](assets/protocol-v3/study-report.json),
+[reprise technique](assets/protocol-v3/technical_retry.json),
+[préparation](assets/protocol-v3/preparation_execution.json),
+[preuve de clôture](assets/protocol-v3/study_execution.json).
+
+Vérification finale après correction : **153 tests réussis en 48,54 secondes**,
+41 avertissements de dépendances ; Ruff conforme. Le registre v3 reste absent,
+le registre v2 évalué et ses empreintes restent inchangés, les alias Home Credit
+locaux restent vides. Les services Docker de ce projet n'ont pas été arrêtés.
+Cette campagne est close sans candidat ; le plan figé n'est pas prolongé
+par des essais supplémentaires ni par un changement rétrospectif des marges.
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+Get-Content runtime/protocol-v3/constrained-study/report.json
+Get-Content runtime/protocol-v3/study_execution.json
+python -m pytest -q
+python -m ruff check .
+```

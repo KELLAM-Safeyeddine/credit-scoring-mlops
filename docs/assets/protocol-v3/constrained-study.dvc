@@ -1,0 +1,6 @@
+outs:
+- md5: f30139cc79717950934ad5e42564da29.dir
+  size: 4351731
+  nfiles: 9
+  hash: md5
+  path: constrained-study

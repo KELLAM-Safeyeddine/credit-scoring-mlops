@@ -1,0 +1,16 @@
+{
+  "age_policy": "EMPLOYED_AGE_RATIO computed for audit only, excluded from model.",
+  "encoding_policy": "Train-only category vocabulary, unknown categories ignored.",
+  "feature_count": 264,
+  "interim_dvc_hash": "cebb8a3b1eea9bf44cbe11b058542c17.dir",
+  "processed_dvc_hash": "fdec4513d9be07de9abdfe5a2d89130c.dir",
+  "protocol_id": "home-credit-independent-v3",
+  "rows": {
+    "production": 24601,
+    "test": 19681,
+    "train": 59041,
+    "val": 19681
+  },
+  "test_evaluated": false,
+  "test_ledger_absent": true
+}

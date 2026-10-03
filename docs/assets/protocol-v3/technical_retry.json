@@ -1,0 +1,9 @@
+{
+  "additional_configurations": 0,
+  "additional_fit_attempts": 1,
+  "correction": "clip final roundoff within 1e-12; reject invalid oracles",
+  "failed_run_id": "8c0617f7198b4ebea66ced05962ad3d9",
+  "fit": "eo-intersection-500-leaves7",
+  "reason": "weighted probability roundoff exceeded 1 during evaluation",
+  "same_configuration_and_seed": true
+}

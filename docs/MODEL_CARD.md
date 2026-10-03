@@ -332,10 +332,13 @@ sur 14 761 clients donne AUC 0,74159, DI âge 0,79575 et écart equal opportunit
 la version 5 du Registry local est rejetée, sans champion Home Credit. Ce test
 est désormais fermé à la sélection et le score reste non calibré.
 [Preuves et limites](ensemble-qualification.md).
-Un [nouveau protocole v3](protocol-v3.md) réserve 123 004 clients inutilisés et
-fixe deux entraînements avec des marges de sélection plus prudentes. Il ne
-fournit encore aucun résultat de modèle ni nouvelle preuve d'équité ; le test
-v2 évalué demeure exclu de la sélection.
+Le [protocole v3](protocol-v3.md) utilise 123 004 clients auparavant inutilisés.
+Ses deux configurations produisent AUC 0,74105 / 0,74073, DI âge 0,92262 /
+0,92126 et écart EO âge 0,06367 / 0,05785 sur validation. Les règles numériques
+de production passent, mais la marge de sélection préspécifiée AUC ≥ 0,745
+échoue : aucun candidat retenu et aucun test v3 évalué. Une reprise technique
+identique est documentée après un dépassement numérique des bornes de score.
+Le test v2 évalué demeure exclu de la sélection ; aucun champion n'est promu.
 
 Définir la population cible, le responsable, une revue humaine effective et un
 recours compréhensible ; valider les droits d'usage et la minimisation des données.
