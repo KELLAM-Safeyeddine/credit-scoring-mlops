@@ -11,8 +11,7 @@ from http.client import HTTPException
 from pathlib import Path
 from uuid import uuid4
 
-from scripts.verify_airflow import api, wait
-from scripts.verify_packaging import IMAGE, docker, request
+from scripts.demo_support import IMAGE, api, docker, request, wait
 
 ROOT = Path(__file__).resolve().parents[1]
 

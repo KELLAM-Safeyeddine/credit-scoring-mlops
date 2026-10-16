@@ -6,7 +6,7 @@ from pathlib import Path
 
 
 def main() -> None:
-    """Validate the interpreter, install dependencies and enable Git hooks."""
+    """Validate the interpreter and install the application dependencies."""
     root = Path(__file__).resolve().parents[1]
     if Path(sys.prefix).resolve() != (root / "creditS").resolve():
         raise SystemExit("Use the Python executable inside this project's creditS.")
@@ -24,9 +24,6 @@ def main() -> None:
         ["dvc", "--version"],
     ):
         subprocess.run([sys.executable, "-m", *args], cwd=root, check=True)
-    subprocess.run([sys.executable, "scripts/check_environment.py"], cwd=root, check=True)
-    if (root / ".git").exists():
-        subprocess.run([sys.executable, "-m", "pre_commit", "install"], cwd=root, check=True)
 
 
 if __name__ == "__main__":

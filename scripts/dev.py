@@ -1,4 +1,4 @@
-"""Run developer commands with the project's virtual environment."""
+"""Run application commands with the project's virtual environment."""
 
 import subprocess
 import sys
@@ -10,14 +10,11 @@ def main() -> None:
     root = Path(__file__).resolve().parents[1]
     if Path(sys.prefix).resolve() != (root / "creditS").resolve():
         raise SystemExit("Activate creditS or call its Python executable directly.")
-    task, *files = sys.argv[1:]
+    task = sys.argv[1]
     commands = {
         "up": [sys.executable, "scripts/start_airflow.py"],
         "demo": [sys.executable, "-m", "scripts.demo"],
         "down": ["docker", "compose", "down"],
-        "test": [sys.executable, "-m", "pytest", *files],
-        "lint": [sys.executable, "-m", "ruff", "check", *(files or ["."])],
-        "format-check": [sys.executable, "-m", "ruff", "format", "--check", *(files or ["."])],
         "train": [sys.executable, "-m", "dvc", "repro"],
     }
     if task == "data":
@@ -25,7 +22,7 @@ def main() -> None:
         subprocess.run([sys.executable, "-m", "src.data.validate"], cwd=root, check=True)
         return
     if task not in commands:
-        raise SystemExit(f"Task '{task}' will be implemented in its project phase.")
+        raise SystemExit(f"Unknown application command: {task}")
     subprocess.run(commands[task], cwd=root, check=True)
 
 
