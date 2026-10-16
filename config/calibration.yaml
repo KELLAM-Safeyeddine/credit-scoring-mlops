@@ -1,0 +1,23 @@
+source_params: runtime/protocol-v3/params.yaml
+source_candidate: runtime/v3-ensemble-qualification/candidate.pkl
+source_candidate_sha256: fa44ff4fe614630456f5980301b852535e488a4dfb1bd079ecab0df7c2244ecd
+output: runtime/calibration-v1
+random_state: 20261016
+calibration_fraction: 0.5
+historical_membership_roots:
+  - data/interim
+  - runtime/qualification-expanded-20/interim
+  - runtime/protocol-v2/memberships
+  - runtime/protocol-v3/memberships
+method: sigmoid_on_raw_score
+max_fits: 1
+test_evaluations: 1
+preserve_decisions: true
+reliability_bins: 10
+shap_sample_size: 100
+promotion_requires:
+  - lower_test_brier
+  - lower_test_log_loss
+  - unchanged_test_decisions
+  - unchanged_test_auc
+  - existing_performance_and_fairness_gates

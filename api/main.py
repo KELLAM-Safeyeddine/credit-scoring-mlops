@@ -79,7 +79,12 @@ def create_app(service: ScoringService | None = None, reload_token: str | None =
             "raw_dvc_hash": snapshot.evidence.get("raw_dvc_hash"),
             "dvc_lock_sha256": snapshot.evidence.get("dvc_lock_sha256"),
             "feature_count": len(snapshot.columns),
-            "score_interpretation": "Score du modèle, probabilité non calibrée.",
+            "calibrated": snapshot.calibrated,
+            "score_interpretation": (
+                "Probabilité de défaut calibrée sur Home Credit ; validation externe nécessaire."
+                if snapshot.calibrated
+                else "Score du modèle, probabilité non calibrée."
+            ),
         }
 
     def infer(payload: Application, explain: bool):

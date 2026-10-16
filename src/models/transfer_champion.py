@@ -14,6 +14,7 @@ import pandas as pd
 from mlflow.models import infer_signature
 
 from src.config import load_config, project_path, write_json
+from src.models.calibration import CalibratedMixture
 from src.models.promote import candidate_evidence, quality_gate, register_and_promote
 
 
@@ -33,7 +34,7 @@ def transfer(params: Path, candidate: Path, target_uri: str) -> dict:
     target_cfg["mlflow"]["tracking_uri"] = target_uri
     mlflow.set_tracking_uri(target_uri)
     mlflow.set_experiment("credit-scoring-qualified-imports")
-    with mlflow.start_run(run_name="qualified-home-credit-v3-import") as run:
+    with mlflow.start_run(run_name="qualified-home-credit-import") as run:
         run_id = run.info.run_id
         mlflow.set_tags(
             {
@@ -63,6 +64,23 @@ def transfer(params: Path, candidate: Path, target_uri: str) -> dict:
         holdout["run_id"] = run_id
         holdout["imported_without_test_reevaluation"] = True
         mlflow.log_dict(holdout, "qualification/holdout_report.json")
+        calibrated = isinstance(bundle["pipeline"][-1], CalibratedMixture)
+        if calibrated:
+            for item in source_client.list_artifacts(bundle["run_id"], "calibration"):
+                if item.is_dir or item.path.endswith("/report.json"):
+                    continue
+                mlflow.log_artifact(
+                    source_client.download_artifacts(bundle["run_id"], item.path), "calibration"
+                )
+            calibration = json.loads(
+                Path(
+                    source_client.download_artifacts(bundle["run_id"], "calibration/report.json")
+                ).read_text(encoding="utf-8")
+            )
+            calibration["qualified_source_run_id"] = bundle["run_id"]
+            calibration["run_id"] = run_id
+            calibration["imported_without_test_reevaluation"] = True
+            mlflow.log_dict(calibration, "calibration/report.json")
         example = pd.read_csv(
             project_path(cfg, "processed") / "X_val.csv", index_col="SK_ID_CURR", nrows=3
         ).astype(float)
@@ -74,12 +92,15 @@ def transfer(params: Path, candidate: Path, target_uri: str) -> dict:
             pyfunc_predict_fn="predict_proba",
             pip_requirements=[
                 f"{package}=={importlib.metadata.version(package)}"
-                for package in ("scikit-learn", "numpy", "pandas", "lightgbm", "mlflow")
+                for package in ("scikit-learn", "numpy", "pandas", "lightgbm", "mlflow", "scipy")
             ],
             metadata={
                 "threshold": bundle["threshold"],
                 "positive_label": 1,
-                "score_semantics": "uncalibrated weighted oracle probabilities",
+                "calibrated": calibrated,
+                "score_semantics": "calibrated default probability"
+                if calibrated
+                else "uncalibrated weighted oracle probabilities",
             },
         )
     imported = {**bundle, "run_id": run_id, "model_uri": info.model_uri}

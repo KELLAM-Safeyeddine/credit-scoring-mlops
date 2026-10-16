@@ -76,6 +76,29 @@ Pour restaurer les données avec DVC, configurer un remote accessible et lancer
 `python -m dvc pull` après activation de `creditS`. Le remote par défaut est
 le dossier local voisin `../dvc-storage` ; il n'est pas hébergé sur GitHub.
 
+## Calibration du score
+
+Avec le candidat qualifié et les répartitions historiques restaurés aux chemins de
+`config/calibration.yaml`, lancer MLflow local, puis exécuter une seule fois :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python -m src.models.calibrate prepare
+python -m src.models.calibrate fit
+python -m src.models.calibrate evaluate
+python -m src.models.calibrate promote
+```
+
+La calibration utilise des clients jamais alloués aux campagnes précédentes.
+Les arbres restent figés et le seuil est converti pour conserver les décisions.
+La promotion exige une amélioration du Brier et de la log-loss sur un nouveau test,
+ainsi que les contrôles de performance et d'équité existants. `evaluate` et `promote`
+réutilisent ensuite le résultat figé ; `prepare` et `fit` refusent de l'écraser.
+L'API doit utiliser cette version du code et recharger le champion après promotion.
+Les artefacts de calibration figés sont suivis par `calibration.dvc` et restaurables
+avec `python -m dvc pull calibration.dvc` après activation de `creditS`, si le remote
+est accessible. Le Registry MLflow reste nécessaire pour servir le champion.
+
 ## Arrêt et redémarrage
 
 ```powershell

@@ -19,6 +19,8 @@ from mlflow import MlflowClient
 from mlflow.artifacts import download_artifacts
 
 from src.features.contracts import EXCLUDED
+from src.models.calibrated_explain import make_explainer
+from src.models.calibration import CalibratedMixture
 from src.models.explain import CreditExplainer
 from src.models.promote import SHAP_FILES, champion_version, quality_gate
 
@@ -36,6 +38,11 @@ class Snapshot:
     threshold: float
     evidence: dict
     explainer: CreditExplainer
+
+    @property
+    def calibrated(self) -> bool:
+        """Derive score semantics from the loaded estimator, never a UI assumption."""
+        return isinstance(self.pipeline[-1], CalibratedMixture)
 
     def transform(self, inputs: dict) -> tuple[pd.DataFrame, list[str]]:
         """Supply missing inputs without fitting or fabricating history."""
@@ -132,6 +139,31 @@ class RegistryLoader:
         metadata = mlflow.models.Model.load(str(Path(local) / "MLmodel"))
         pipeline = mlflow.sklearn.load_model(local)
         threshold = float(metadata.metadata["threshold"])
+        if isinstance(pipeline[-1], CalibratedMixture):
+            calibration = json.loads(
+                artifact("calibration/report.json").read_text(encoding="utf-8")
+            )
+            coefficients = json.loads(
+                artifact("calibration/coefficients.json").read_text(encoding="utf-8")
+            )
+            required_rules = {
+                "lower_test_brier",
+                "lower_test_log_loss",
+                "unchanged_test_decisions",
+                "unchanged_test_auc",
+            }
+            calibration_rules = calibration.get("calibration", {}).get("rules", {})
+            if (
+                calibration.get("run_id") != run_id
+                or calibration.get("passed") is not True
+                or not required_rules.issubset(calibration_rules)
+                or not all(calibration_rules[name] is True for name in required_rules)
+                or coefficients.get("slope") != pipeline[-1].slope
+                or coefficients.get("intercept") != pipeline[-1].intercept
+                or coefficients.get("calibrated_threshold") != threshold
+                or report.get("units") != "calibrated_log_odds"
+            ):
+                raise ValueError("Calibration evidence is inconsistent or rejected.")
         if (
             not 0 < threshold < 1
             or pipeline.n_features_in_ != len(columns)
@@ -151,7 +183,7 @@ class RegistryLoader:
             columns,
             threshold,
             evidence,
-            CreditExplainer({"pipeline": pipeline, "columns": columns}),
+            make_explainer({"pipeline": pipeline, "columns": columns}),
         )
 
 
@@ -195,6 +227,10 @@ class ScoringService:
             "decision": "refus" if decision else "acceptation",
             "threshold": snapshot.threshold,
             "missing_inputs": missing,
+            "calibrated": snapshot.calibrated,
+            "explanation_units": "calibrated_log_odds"
+            if snapshot.calibrated
+            else "raw_model_score",
         }
         if explain:
             result["reasons"] = snapshot.explainer.top_reasons(x, min(3, len(x.columns)))

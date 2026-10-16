@@ -59,8 +59,8 @@ async function refreshModel() {
     $("model-status").textContent = "Disponible";
     $("model-version").textContent = `v${info.version}`;
     $("model-auc").textContent = Number.isFinite(info.metrics.validation_auc) ? info.metrics.validation_auc.toFixed(4).replace(".", ",") : "—";
-    $("model-threshold").textContent = numericFormat.format(info.threshold * 100) + " / 100";
-    $("model-note").textContent = "Version chargée par le service · score non calibré";
+    $("model-threshold").textContent = numericFormat.format(info.threshold * 100) + (info.calibrated === true ? " %" : " / 100");
+    $("model-note").textContent = info.calibrated === true ? "Version chargée par le service · probabilité calibrée" : "Version chargée par le service · score non calibré";
   } catch (error) {
     modelReady = false;
     $("model-status").className = "status unavailable";
@@ -105,14 +105,18 @@ function renderResult(result) {
     throw new Error("Les explications reçues sont incomplètes. Réessayez.");
   }
   const refusal = result.predicted_default === 1;
+  const calibrated = result.calibrated === true;
+  $("score-unit").textContent = calibrated ? "%" : "/ 100";
+  $("score-caption").textContent = calibrated ? "Probabilité estimée de défaut · calibrée sur Home Credit" : "Score du modèle · non calibré";
+  $("score-note").textContent = calibrated ? "Calibration vérifiée sur des dossiers Home Credit réservés. Les dossiers incomplets sont imputés ; cette probabilité nécessite une validation sur la population d’utilisation." : "Ce score n’est pas une probabilité de défaut calibrée. La décision affichée est celle du modèle au seuil configuré.";
   $("decision").textContent = refusal ? "Refus selon le seuil du modèle" : "Acceptation selon le seuil du modèle";
   $("decision").className = refusal ? "decision refusal" : "decision";
   $("score-value").textContent = numericFormat.format(result.default_score * 100);
   $("score-fill").style.width = `${result.default_score * 100}%`;
   $("score-fill").className = refusal ? "refusal" : "";
   $("threshold-marker").style.left = `${result.threshold * 100}%`;
-  $("threshold-label").textContent = `Seuil : ${numericFormat.format(result.threshold * 100)}`;
-  $("score-track").setAttribute("aria-label", `Score ${numericFormat.format(result.default_score * 100)} sur 100 ; seuil ${numericFormat.format(result.threshold * 100)}`);
+  $("threshold-label").textContent = `Seuil : ${numericFormat.format(result.threshold * 100)}${calibrated ? " %" : ""}`;
+  $("score-track").setAttribute("aria-label", `${calibrated ? "Probabilité estimée de défaut" : "Score"} ${numericFormat.format(result.default_score * 100)} ${calibrated ? "pour cent" : "sur 100"} ; seuil ${numericFormat.format(result.threshold * 100)}`);
   $("result-version").textContent = `Modèle v${result.model_version}`;
   $("result-version").hidden = false;
   const max = Math.max(...result.reasons.map((reason) => Math.abs(reason.contribution_raw_score)), Number.EPSILON);
@@ -145,7 +149,7 @@ function renderResult(result) {
   $("request-id").textContent = result.request_id;
   $("empty-state").hidden = true;
   $("analysis-result").hidden = false;
-  $("result-announcement").textContent = `Analyse terminée. ${$("decision").textContent}. Score : ${numericFormat.format(result.default_score * 100)} sur 100.`;
+  $("result-announcement").textContent = `Analyse terminée. ${$("decision").textContent}. ${calibrated ? "Probabilité estimée de défaut" : "Score"} : ${numericFormat.format(result.default_score * 100)} ${calibrated ? "pour cent" : "sur 100"}.`;
   if (window.innerWidth <= 680) {
     document.querySelector(".result-panel").scrollIntoView({behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start"});
   }

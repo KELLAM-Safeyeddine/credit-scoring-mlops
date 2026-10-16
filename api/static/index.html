@@ -66,10 +66,10 @@
         <p id="result-announcement" class="visually-hidden" role="status" aria-live="polite"></p>
         <div id="analysis-result" hidden>
           <p id="decision" class="decision"></p>
-          <div class="score-line"><strong id="score-value">—</strong><span>/ 100</span></div><p class="score-caption">Score du modèle · non calibré</p>
+          <div class="score-line"><strong id="score-value">—</strong><span id="score-unit">/ 100</span></div><p class="score-caption" id="score-caption">Score du modèle</p>
           <div class="score-track" role="img" id="score-track"><div id="score-fill"></div><span id="threshold-marker"></span></div>
           <div class="scale-labels"><span>Score plus faible</span><span id="threshold-label"></span></div>
-          <p class="score-note">Ce score n’est pas une probabilité de défaut calibrée. La décision affichée est celle du modèle au seuil configuré.</p>
+          <p class="score-note" id="score-note">La décision affichée est celle du modèle au seuil configuré.</p>
           <div class="reasons-heading"><h3>Les 3 principaux facteurs</h3><span>SHAP</span></div><ol id="reasons" class="reasons"></ol><p class="field-note">Ces contributions décrivent des associations du modèle, pas des causes.</p>
           <details class="missing-section"><summary id="missing-title">Données absentes</summary><p>Les valeurs absentes sont remplacées avec les paramètres appris sur le train. Ce formulaire couvre seulement une partie des entrées du modèle.</p><ul id="missing-fields"></ul></details>
           <p class="request-reference">Référence de l’analyse <span id="request-id"></span></p>
