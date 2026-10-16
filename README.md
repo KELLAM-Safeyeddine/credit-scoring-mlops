@@ -43,9 +43,22 @@ et attend les healthchecks. Les identifiants Airflow sont conservés dans `.env`
 
 | Service | Adresse |
 |---|---|
+| Interface de scoring | http://localhost:8000/ |
 | Documentation de l'API | http://localhost:8000/docs |
 | MLflow Docker | http://localhost:5001 |
 | Airflow | http://localhost:8081 |
+
+Pour lancer uniquement l’interface et l’API en local, avec le Registry MLflow local :
+
+```powershell
+.\creditS\Scripts\Activate.ps1
+python scripts/mlflow_server.py
+python scripts/serve_api.py
+```
+
+L’interface est accessible sur http://localhost:8000/. Elle permet de saisir un dossier,
+de charger un exemple fictif et d’afficher le score et les trois raisons SHAP.
+Le port 8000 doit être libre : arrêter l’API Docker avant de lancer ce serveur local.
 
 L'API charge `credit-scoring@champion` depuis le Registry Docker. Les données,
 modèles et bases MLflow ne sont pas inclus dans Git. Sur une installation neuve,

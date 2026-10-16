@@ -3,10 +3,12 @@
 import hmac
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Header, HTTPException
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.model_loader import create_service
 from api.schemas import Application
@@ -23,6 +25,13 @@ def create_app(service: ScoringService | None = None, reload_token: str | None =
         yield
 
     app = FastAPI(title="Credit scoring", lifespan=lifespan)
+    static = Path(__file__).resolve().parent / "static"
+    app.mount("/static", StaticFiles(directory=static), name="static")
+
+    @app.get("/", include_in_schema=False)
+    def interface():
+        """Serve the same-origin scoring interface without exposing private state."""
+        return FileResponse(static / "index.html", headers={"Cache-Control": "no-cache"})
 
     @app.exception_handler(RequestValidationError)
     async def invalid_payload(request, error: RequestValidationError):
